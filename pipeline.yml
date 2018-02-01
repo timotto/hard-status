@@ -142,6 +142,8 @@ jobs:
   - task: test
     image: release
     file: source-code/src/main/ci/single-integration.yml
+    params:
+      concourse: ((concourse-url))
 
 - name: promote
   serial_groups: [version]
@@ -354,6 +356,7 @@ resources:
   source:
     <<: *project-source
     paths:
+    - src/main/ci
     - src/main/ts
     - src/main/helm
     - Dockerfile
