@@ -4,7 +4,7 @@ set -e -x
 
 gracetime=${gracetime:-30}
 
-test_url="${protocol}://${hostname}:${port}/concourse?url=${concourse}"
+test_url="${protocol}://${hostname}:${port}"
 echo "testin ${test_url} in $gracetime seconds"
 sleep $gracetime
 
@@ -19,4 +19,4 @@ else
     exit 1
 fi
 
-curl --fail --max-time 30 ${test_url}
+curl --fail --max-time 30 "${test_url}/concourse?url=${concourse}"
