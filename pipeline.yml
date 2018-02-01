@@ -418,6 +418,8 @@ resources:
     <<: *project-source
     paths:
     - src/arduino/ci/arduino-docker
+    - src/arduino/ci/prepare-arduino-docker.sh
+    - src/arduino/ci/prepare-arduino-docker.yml
 
 - name: arduino-esp32-docker-source
   type: git
@@ -425,6 +427,8 @@ resources:
     <<: *project-source
     paths:
     - src/arduino/ci/arduino-esp32-docker
+    - src/arduino/ci/prepare-arduino-esp32-docker.sh
+    - src/arduino/ci/prepare-arduino-esp32-docker.yml
 
 - name: lolin32-firmware
   type: curl
