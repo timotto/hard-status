@@ -1,0 +1,130 @@
+<html data-theme=dark>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href=http://staticresource.com/basic.css rel=stylesheet>
+    <link href=http://staticresource.com/data-buttons.css rel=stylesheet>
+    <style>
+        html,body{margin:0;padding:0;max-width:none;}
+        section{padding:1.5em;}
+        main{margin:0 auto;max-width:850px;}
+        input{width:100%;height:3em;}
+        .error {color: red}
+    </style>
+    <script>
+        const api = '';
+
+        const ajax = (method, url, data) => new Promise((resolve, reject) => {
+            const req = new XMLHttpRequest();
+            req.open(method, url);
+            req.onload = () => req.status === 200
+                ? resolve(req.response)
+                : reject(new Error(req.statusText));
+            req.onerror = () => reject(new Error('Network error'));
+            req.send(data);
+        });
+        const ajaxPost = (url, data) => ajax('POST', url, data);
+        const ajaxGet = url => ajax('GET', url, undefined);
+        const enrichResult = result => {
+            if (result.hotspot === undefined) result.hotspot = {login: 'hard-status', password: 'changeme'};
+            if (result.wifi === undefined) result.wifi = [];
+            while (result.wifi.length < 4) result.wifi.push({login: '', password: ''});
+            return result;
+        };
+        const createUiFromResult = (result, topkey) => Object.keys(result)
+            .map(key => ({key: `${topkey ? topkey : ''}${key}`, value: result[key]}))
+            .map(createPair);
+        let level = 0;
+        const createPair = pair => {
+            level++;
+            const div = document.createElement('div');
+
+            const label = document.createElement(`h${level + 1}`);
+            label.appendChild(document.createTextNode(`${pair.key}`));
+            div.appendChild(label);
+
+            switch (typeof pair.value) {
+                case 'string':
+                    const input = document.createElement('input');
+                    input.setAttribute('name', pair.key);
+                    input.setAttribute('type', pair.key.endsWith('password')?'password':'text');
+                    input.value = pair.value;
+                    const p = document.createElement('p');
+                    p.appendChild(input);
+                    div.appendChild(p);
+                    break;
+                case 'object':
+                    createUiFromResult(pair.value, `${pair.key}.`)
+                        .forEach(pairDiv => div.appendChild(pairDiv));
+                    break;
+            }
+            level--;
+            return div;
+        };
+        const drawUiFromResult = divs => divs
+            .forEach(div => document.body.insertBefore(div, document.getElementById('ui')));
+
+        const rescueArray = value => {
+            if (typeof value !== 'object') return value;
+            if (Object.keys(value).filter(key => parseInt(key).toString() !== key).length > 0) return value;
+            return Object.keys(value).map(key => value[key]);
+        };
+        const rescueArrays = o => {
+            Object.keys(o).forEach(key => o[key] = rescueArray(o[key]));
+            return o;
+        };
+        const mergeSplitKeyProperty = (o, pair) => {
+            const parts = pair.key.split('.');
+            const last = parts.pop();
+            const p = parts.reduce((q, key) => {
+                if (q[key] === undefined) q[key] = {};
+                return q[key];
+            }, o);
+            p[last] = pair.value;
+            return o;
+        };
+        const storeResultFromUi = () => Array.prototype.slice.call(document.getElementsByTagName('input'))
+            .map(item => ({key: item.getAttribute('name'), value: item.value}))
+            .reduce(mergeSplitKeyProperty, {});
+
+        const confirmSave = () => displayStatus('settings saved');
+        const rejectSave = e => displayError(`failed to save settings: ${e}`);
+        const rejectLoad = e => displayError(`failed to load settings: ${e}`);
+        const displayError = e => displayStatus(`<p class="error">${e}</p>`);
+        const displayStatus = text => Array.prototype.slice.call(document.getElementsByClassName('status'))
+            .forEach(div => div['innerHTML'] = text);
+
+        const subkey = (o,dotKey) => dotKey.split('.').reduce((p,key) => p[key], o);
+
+        const updateUi = result => Array.prototype.slice.call(document.getElementsByTagName('input'))
+            .forEach(input => input.value = input.getAttribute('name').split('.').reduce((o,key) => o!==undefined?o[key]:undefined, result));
+
+        const load = () => ajaxGet(`${api}status`)
+            .then(JSON.parse)
+            .then(enrichResult)
+            .then(createUiFromResult)
+            .then(drawUiFromResult)
+            .catch(rejectLoad);
+
+        const save = () => ajaxPost(`${api}save1`, JSON.stringify(rescueArrays(storeResultFromUi())))
+            .then(JSON.parse)
+            .then(updateUi)
+            .then(confirmSave)
+            .catch(rejectSave);
+
+        const onSave = () => {
+            save();
+            return false;
+        };
+
+        document.onload = load();
+
+    </script>
+</head>
+<body>
+<h1>hard-status</h1>
+<hr>
+<div class="status"></div>
+<a id="ui" href=# data-button onclick="return onSave()">Save</a>
+<div class="status"></div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: linkyard/concourse-helm-resource
+inputs:
+- name: source-code
+- name: version
+outputs:
+- name: chart
+run:
+  path: source-code/src/main/ci/create-chart.sh

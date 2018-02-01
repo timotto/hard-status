@@ -1,0 +1,16 @@
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: node
+    tag: 8-alpine
+inputs:
+- name: arduino-ci
+- name: hard-status-esp32-source
+outputs:
+- name: defaults
+run:
+  path: arduino-ci/src/arduino/ci/build-defaults.sh
+  args:
+  - hard-status-esp32-source
+  - defaults

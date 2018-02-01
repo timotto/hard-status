@@ -1,0 +1,5 @@
+platform: linux
+inputs:
+- name: arduino-ci
+run:
+  path: arduino-ci/src/arduino/ci/test-arduino-esp32-docker.sh

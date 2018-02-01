@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: hard-status-ingress
+  labels:
+    app: hard-status
+spec:
+  rules:
+  - host: {{ .Values.ingressHostname }}
+    http:
+      paths:
+      - backend:
+          serviceName: hard-status-service
+          servicePort: 3001

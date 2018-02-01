@@ -1,0 +1,6 @@
+platform: linux
+inputs:
+- name: source-code
+run:
+  path: src/main/ci/unit.sh
+  dir: source-code

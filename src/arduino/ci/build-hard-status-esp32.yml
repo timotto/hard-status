@@ -1,0 +1,18 @@
+platform: linux
+inputs:
+- name: arduino-ci
+- name: hard-status-esp32-source
+- name: neopixelbus-library-source
+- name: webserver-library-source
+- name: arduinojson-library-source
+- name: html
+- name: defaults
+outputs:
+- name: lolin32-firmware-build
+run:
+  path: arduino-ci/src/arduino/ci/build-hard-status-esp32.sh
+  args:
+  - hard-status-esp32-source
+  - html
+  - defaults
+  - lolin32-firmware-build

@@ -1,0 +1,10 @@
+name: hard-status
+version: 0.0.1
+description: Transform dashboards into strings for easy digestion by IoT devices
+keywords:
+- nodejs
+sources:
+- https://github.com/timotto/hard-status
+maintainers:
+- name: Tim
+engine: gotpl

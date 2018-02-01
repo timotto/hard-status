@@ -1,0 +1,6 @@
+replicas: 2
+imageRegistry: timotto
+imageName: hard-status
+imageSecret: my-registry
+redisDockerImage: redis
+redisReplicas: 1

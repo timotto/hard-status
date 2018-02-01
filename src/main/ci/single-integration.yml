@@ -1,0 +1,5 @@
+platform: linux
+inputs:
+- name: source-code
+run:
+  path: source-code/src/main/ci/single-integration.sh

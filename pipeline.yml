@@ -1,0 +1,499 @@
+groups:
+- name: all
+  jobs:
+  - unit
+  - build-rc
+  - integration
+  - single-integration
+  - promote
+  - bump-patch
+  - bump-minor
+  - bump-major
+  - deploy
+  - arduino-docker-build
+  - arduino-docker-promotion
+  - arduino-esp32-docker-build
+  - arduino-esp32-docker-promotion
+  - arduinojson-test
+  - hard-status-esp32
+- name: backend
+  jobs:
+  - unit
+  - build-rc
+  - integration
+  - single-integration
+  - promote
+  - bump-patch
+  - bump-minor
+  - bump-major
+  - deploy
+- name: esp32-firmware
+  jobs:
+  - arduino-docker-build
+  - arduino-docker-promotion
+  - arduino-esp32-docker-build
+  - arduino-esp32-docker-promotion
+  - arduinojson-test
+  - hard-status-esp32
+
+jobs:
+- name: unit
+  plan:
+  - aggregate:
+    - get: source-code
+      trigger: true
+    - get: base-image
+      trigger: true
+  - task: test
+    image: base-image
+    file: source-code/src/main/ci/unit.yml
+
+- name: build-rc
+  serial_groups: [version]
+  plan:
+  - aggregate:
+    - get: source-code
+      trigger: true
+      passed: [unit]
+    - get: version
+      params:
+        pre: rc
+    - get: base-image
+      trigger: true
+      passed: [unit]
+      params:
+        skip_download: true
+  - aggregate:
+    - put: release
+      params:
+        build: source-code
+        tag: version/number
+        tag_prefix: v
+        tag_as_latest: false
+  - put: version
+    params:
+      file: version/number
+- name: integration
+  serial_groups: [cloud-it]
+  plan:
+  - aggregate:
+    - get: source-code
+      passed: [build-rc]
+    - get: release
+      passed: [build-rc]
+      trigger: true
+      params:
+        skip_download: true
+    - get: version
+      passed: [build-rc]
+    - get: redis-runtime
+      trigger: true
+      params:
+        skip_download: true
+  - task: create-chart
+    file: source-code/src/main/ci/create-chart.yml
+    params:
+      version: ((chartVersion))
+  - do:
+    - put: helm-cloud-it
+      params:
+        chart: chart/hard-status-((chartVersion)).tgz
+        wait_until_ready: 180
+        replace: true
+        override_values:
+        - key: imageSecret
+          value: ((cluster1it.secret_name))
+        - key: ingressHostname
+          value: ((ingressITHostname))
+        - key: serviceType
+          value: ClusterIP
+    - task: test
+      attempts: 5
+      params:
+        protocol: https
+        port: 443
+        hostname: ((ingressITHostname))
+        concourse: ((concourse-url))
+      file: source-code/src/main/ci/integration-test.yml
+    ensure:
+      put: helm-cloud-it
+      params:
+        chart: chart/hard-status-((chartVersion)).tgz
+        wait_until_ready: 180
+        delete: true
+        override_values:
+        - key: imageSecret
+          value: ((cluster1it.secret_name))
+        - key: ingressITHostname
+          value: ((ingressHostname))
+        - key: serviceType
+          value: ClusterIP
+
+- name: single-integration
+  plan:
+  - aggregate:
+    - get: source-code
+      passed: [build-rc]
+    - get: release
+      passed: [build-rc]
+      trigger: true
+    - get: version
+      passed: [build-rc]
+  - task: test
+    image: release
+    file: source-code/src/main/ci/single-integration.yml
+
+- name: promote
+  serial_groups: [version]
+  plan:
+  - aggregate:
+    - get: source-code
+      passed: [integration, single-integration]
+    - get: release-rc
+      resource: release
+      trigger: true
+      passed: [integration, single-integration]
+      params:
+        save: true
+    - get: version
+      passed: [integration, single-integration]
+      params:
+        bump: final
+  - aggregate:
+    - put: release
+      params:
+        load: release-rc
+        tag: version/number
+        tag_prefix: v
+        tag_as_latest: false
+  - put: version
+    params:
+      file: version/number
+
+- name: bump-patch
+  serial_groups: [version]
+  plan:
+  - get: release
+    trigger: true
+    passed: [promote]
+    params: {skip_download: true}
+  - get: version
+    passed: [promote]
+    trigger: true
+  - put: version
+    params:
+      bump: patch
+
+- name: bump-minor
+  serial_groups: [version]
+  plan:
+  - put: version
+    params:
+      bump: minor
+
+- name: bump-major
+  serial_groups: [version]
+  plan:
+  - put: version
+    params:
+      bump: major
+
+- name: deploy
+  serial_groups: [helm-cloud]
+  plan:
+  - aggregate:
+    - get: source-code
+      passed: [promote]
+    - get: release
+      passed: [promote]
+      trigger: true
+      params:
+        skip_download: true
+    - get: version
+      trigger: true
+      passed: [promote]
+  - task: create-chart
+    file: source-code/src/main/ci/create-chart.yml
+    params:
+      version: ((chartVersion))
+  - put: helm-cloud
+    params:
+      chart: chart/hard-status-((chartVersion)).tgz
+      wait_until_ready: 60
+      replace: true
+      override_values:
+      - key: imageSecret
+        value: ((cluster1.secret_name))
+      - key: ingressHostname
+        value: ((ingressHostname))
+      - key: serviceType
+        value: ClusterIP
+
+- name: arduino-docker-build
+  plan:
+  - aggregate:
+    - get: arduino-ci
+    - get: base-docker-image
+      trigger: true
+      params:
+        skip_download: true
+    - get: arduino-release
+      trigger: true
+    - get: arduino-docker-source
+      trigger: true
+  - task: prepare-docker-build
+    file: arduino-ci/src/arduino/ci/prepare-arduino-docker.yml
+  - put: arduino-docker-image
+    params:
+      build: arduino-release-docker-source
+      tag: arduino-release/version
+      build_args_file: build-args/arduino-build-args.json
+  - task: unit
+    image: arduino-docker-image
+    file: arduino-ci/src/arduino/ci/test-arduino-docker.yml
+
+- name: arduino-docker-promotion
+  plan:
+  - get: arduino-docker-image
+    passed: [arduino-docker-build]
+    trigger: true
+    params:
+      save: true
+  - put: arduino-docker-image
+    params:
+      load: arduino-docker-image
+      tag_as_latest: true
+
+- name: arduino-esp32-docker-build
+  plan:
+  - aggregate:
+    - get: arduino-ci
+    - get: arduino-docker-image
+      trigger: true
+      passed: [arduino-docker-promotion]
+      params:
+        skip_download: true
+        tag: latest
+    - get: arduino-esp32-source
+      trigger: true
+      params:
+        submodules: all
+    - get: arduino-esp32-docker-source
+      trigger: true
+  - task: prepare-docker-build
+    file: arduino-ci/src/arduino/ci/prepare-arduino-esp32-docker.yml
+    params:
+      FROM: ((project-registry))/((arduino-image-name))
+  - put: arduino-esp32-docker-image
+    params:
+      build: build
+      save: true
+  - task: test
+    image: arduino-esp32-docker-image
+    file: arduino-ci/src/arduino/ci/test-arduino-esp32-docker.yml
+
+- name: arduino-esp32-docker-promotion
+  plan:
+  - get: arduino-esp32-docker-image
+    passed: [arduino-esp32-docker-build]
+    trigger: true
+    params:
+      save: true
+  - put: arduino-esp32-docker-image
+    params:
+      load: arduino-esp32-docker-image
+      tag_as_latest: true
+
+- name: arduinojson-test
+  plan:
+  - get: arduinojson-library-source
+    trigger: true
+  - get: arduino-ci
+  - task: test
+    file: arduino-ci/src/arduino/ci/test-arduinojson.yml
+
+- name: hard-status-esp32
+  plan:
+  - aggregate:
+    - get: arduino-ci
+    - get: arduino-esp32-docker-image
+      trigger: true
+      passed: [arduino-esp32-docker-promotion]
+    - get: hard-status-esp32-source
+      trigger: true
+    - get: neopixelbus-library-source
+      trigger: true
+    - get: webserver-library-source
+      trigger: true
+    - get: arduinojson-library-source
+      trigger: true
+      passed: [arduinojson-test]
+  - aggregate:
+    - task: defaults
+      file: arduino-ci/src/arduino/ci/build-defaults.yml
+      params:
+        DEFAULT_NAME: ((firmware.default.name))
+        DEFAULT_PASSWORD: ((firmware.default.password))
+        DEFAULT_API_URL: https://((ingressHostname))/concourse?url=((concourse-url))
+        DEFAULT_OTA_URL: ((firmware.url))
+        DEFAULT_OTA_AUTH: ((firmware.default.ota_auth))
+        DEFAULT_WIFI0_SSID: ((firmware.default.wifi0_ssid))
+        DEFAULT_WIFI0_PSK: ((firmware.default.wifi0_psk))
+    - task: html
+      file: arduino-ci/src/arduino/ci/build-html.yml
+  - task: build
+    image: arduino-esp32-docker-image
+    file: arduino-ci/src/arduino/ci/build-hard-status-esp32.yml
+  - put: lolin32-firmware
+    params:
+      path: lolin32-firmware-build/hard-status-esp32-lolin32.bin
+
+resources:
+- name: source-code
+  type: git
+  source:
+    <<: *project-source
+    paths:
+    - src/main/ts
+    - src/main/helm
+    - Dockerfile
+    - jasmine.json
+    - package.json
+    - tsconfig.json
+    - .eslintrc.yaml
+
+- name: base-image
+  type: docker-image
+  source:
+    repository: node
+    tag: 8-alpine
+
+- name: release
+  type: docker-image
+  source:
+    repository: ((project-registry))/((backend-image-name))
+    username: ((docker.username))
+    password: ((docker.password))
+
+- name: redis-runtime
+  type: docker-image
+  source:
+    repository: redis
+
+- name: version
+  type: semver
+  source:
+    driver: git
+    uri: ((git.uri))
+    branch: version
+    file: version
+    private_key: ((git.private_key))
+
+- name: helm-cloud
+  type: helm
+  source: ((cluster1))
+
+- name: helm-cloud-it
+  type: helm
+  source: ((cluster1it))
+
+- name: hard-status-esp32-source
+  type: git
+  source:
+    <<: *project-source
+
+- name: arduino-ci
+  type: git
+  source:
+    <<: *project-source
+    paths:
+    - src/arduino/ci
+
+- name: arduino-docker-source
+  type: git
+  source:
+    <<: *project-source
+    paths:
+    - src/arduino/ci/arduino-docker
+
+- name: arduino-esp32-docker-source
+  type: git
+  source:
+    <<: *project-source
+    paths:
+    - src/arduino/ci/arduino-esp32-docker
+
+- name: lolin32-firmware
+  type: curl
+  source:
+    method: PUT
+    url: ((firmware.url))
+    username: ((firmware.username))
+    password: ((firmware.password))
+
+- name: arduino-docker-image
+  type: docker-image
+  source:
+    username: ((docker.username))
+    password: ((docker.password))
+    repository: ((project-registry))/((arduino-image-name))
+
+- name: arduino-esp32-docker-image
+  type: docker-image
+  source:
+    username: ((docker.username))
+    password: ((docker.password))
+    repository: ((project-registry))/((arduino-esp32-image-name))
+
+- name: base-docker-image
+  type: docker-image
+  check_every: 1h
+  source:
+    repository: debian
+    tag: latest
+
+- name: arduino-release
+  type: github-release
+  check_every: 1h
+  source:
+    owner: arduino
+    repository: arduino
+
+- name: arduino-esp32-source
+  type: git
+  check_every: 1h
+  source:
+    uri: https://github.com/espressif/arduino-esp32.git
+
+- name: arduinojson-library-source
+  type: git
+  source:
+    uri: https://github.com/bblanchon/ArduinoJson.git
+
+- name: neopixelbus-library-source
+  type: git
+  source:
+    uri: https://github.com/timotto/NeoPixelBus.git
+
+- name: webserver-library-source
+  type: git
+  source:
+    uri: https://github.com/bbx10/WebServer_tng.git
+
+resource_types:
+- name: helm
+  type: docker-image
+  source:
+    repository: linkyard/concourse-helm-resource
+
+- name: curl
+  type: docker-image
+  source:
+    repository: timotto/concourse-curl-resource
+    tag: latest
+
+project-source: &project-source
+  uri: ((git.uri))
+  branch: ((git.branch))
+  private_key: ((git.private_key))
+

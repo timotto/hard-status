@@ -1,0 +1,13 @@
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: alpine
+inputs:
+- name: arduino-ci
+- name: arduino-esp32-source
+- name: arduino-esp32-docker-source
+outputs:
+- name: build
+run:
+  path: arduino-ci/src/arduino/ci/prepare-arduino-esp32-docker.sh

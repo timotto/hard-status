@@ -1,0 +1,38 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: hard-status
+spec:
+  selector:
+    matchLabels:
+      app: hard-status
+  replicas: {{.Values.replicas}}
+  template:
+    metadata:
+      labels:
+        app: hard-status
+    spec:
+      imagePullSecrets:
+      - name: {{.Values.imageSecret}}
+      containers:
+        - name: hard-status
+          image: {{.Values.imageRegistry}}/{{.Values.imageName}}:v{{.Values.version}}
+          imagePullPolicy: Always
+          env:
+          - name: REDIS_URL
+            value: tcp://redis-service:6379
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "60Mi"
+            requests:
+              cpu: "0.2"
+              memory: "30Mi"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          ports:
+          - containerPort: 3001
