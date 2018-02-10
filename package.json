@@ -5,8 +5,9 @@
     "eslint": "eslint",
     "cleanstart": "rm -rf dist && tsc && node dist",
     "start": "tsc && node dist",
-    "test": "jasmine-ts --config=jasmine.json",
     "tests": "nodemon -w src --ext ts --exec yarn run test",
+    "test": "nyc -r lcov -e .ts -x \"**/*.spec.ts\" jasmine-ts --config=jasmine.json",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "dev": "nodemon -w src --ext ts --exec yarn run start"
   },
   "devDependencies": {
@@ -17,6 +18,7 @@
     "@types/request-promise": "^4.1.39",
     "@types/request-promise-native": "^1.0.10",
     "@types/supertest": "^2.0.4",
+    "coveralls": "^3.0.0",
     "jasmine": "^2.8.0",
     "jasmine-spec-reporter": "^4.2.1",
     "jasmine-ts": "^0.2.1",
@@ -24,6 +26,7 @@
     "nock": "^9.0.22",
     "node-mocks-http": "^1.6.6",
     "nodemon": "^1.12.1",
+    "nyc": "^11.4.1",
     "supertest": "^3.0.0",
     "typescript": "^2.5.2",
     "typescript-eslint-parser": "^8.0.0",
