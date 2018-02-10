@@ -51,13 +51,18 @@ void loop_api() {
   
   if(otaState != OTA_STATE_IDLE) return;
 
-  for(int i=0;i<line.length();i+=2) {
-    const int led = i / 2;
-    if (led >= LED_PIXEL_COUNT) continue;
-    led_set_color(
-      led, 
-      codeToColor(line.charAt(i)), 
-      codeToColor(line.charAt(i+1)));
+  int n = line.length();
+  int offset = 0;
+  while(offset < LED_PIXEL_COUNT) {
+    for(int i=0;i<line.length();i+=2) {
+      const int led = offset + (i / 2);
+      if (led >= LED_PIXEL_COUNT) continue;
+      led_set_color(
+        led, 
+        codeToColor(line.charAt(i)), 
+        codeToColor(line.charAt(i+1)));
+    }
+    offset += n/2;
   }
   nextApiCall = millis() + (1000 * config.apiCheckDelay);
 }
