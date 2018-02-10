@@ -27,7 +27,7 @@ export class ConcourseTransformer {
                 {dots:[], ranges:[]});
     }
 
-    private static jobToDot(job: any): any {
+    public static jobToDot(job: any): any {
         const next = job.next_build === undefined || job.next_build === null
             ? ' '
             : ConcourseTransformer.parseJobStatus(job.next_build);
@@ -38,7 +38,7 @@ export class ConcourseTransformer {
         return [finished,next].join('');
     }
 
-    private static parseJobStatus(status: any): any {
+    public static parseJobStatus(status: any): any {
         switch (status.status) {
             case undefined:
                 return 'u';
