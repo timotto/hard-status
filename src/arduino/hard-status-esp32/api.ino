@@ -52,6 +52,8 @@ void loop_api() {
   if(otaState != OTA_STATE_IDLE) return;
 
   int n = line.length();
+  if (n <= 0 || n % 2 != 0) return;
+  
   int offset = 0;
   while(offset < LED_PIXEL_COUNT) {
     for(int i=0;i<line.length();i+=2) {
