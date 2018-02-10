@@ -404,6 +404,9 @@ resources:
   type: git
   source:
     <<: *project-source
+    paths:
+    - src/arduino/hard-status-esp32
+    - src/arduino/ci
 
 - name: arduino-ci
   type: git
