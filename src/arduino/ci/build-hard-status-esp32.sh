@@ -5,7 +5,8 @@ set -e -x
 SRC="${1:-.}"
 HTML="${2:-.}"
 DEFAULTS="${3:-.}"
-DST="${4:-.}"
+HARDWARE="${3:-.}"
+DST="${5:-.}"
 
 mkdir -p $HOME/Arduino/libraries/
 
@@ -15,9 +16,7 @@ git clone --depth=1 arduinojson-library-source $HOME/Arduino/libraries/ArduinoJs
 
 cp -v "$HTML"/html.h "$SRC"/src/arduino/hard-status-esp32/html.h
 cp -v "$DEFAULTS"/defaults.h "$SRC"/src/arduino/hard-status-esp32/defaults.h
-sed -i "$SRC"/src/arduino/hard-status-esp32/defaults.h \
-    -es/^#define LED_PIXEL_COUNT.*/#define $LED_COUNT/
-cat "$SRC"/src/arduino/hard-status-esp32/defaults.h
+cp -v "$HARDWARE"/hardware.h "$SRC"/src/arduino/hard-status-esp32/hardware.h
 
 cd "$SRC"
 
