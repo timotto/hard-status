@@ -5,7 +5,7 @@ set -e -x
 SRC="${1:-.}"
 HTML="${2:-.}"
 DEFAULTS="${3:-.}"
-HARDWARE="${3:-.}"
+HARDWARE="${4:-.}"
 DST="${5:-.}"
 
 mkdir -p $HOME/Arduino/libraries/
