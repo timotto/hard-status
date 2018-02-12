@@ -6,7 +6,7 @@
     "cleanstart": "rm -rf dist && tsc && node dist",
     "start": "tsc && node dist",
     "tests": "nodemon -w src --ext ts --exec yarn run test",
-    "test": "nyc -r lcov -e .ts -x \"**/*.spec.ts\" jasmine-ts --config=jasmine.json",
+    "test": "nyc -r text -r lcov -e .ts -x \"**/*.spec.ts\" jasmine-ts --config=jasmine.json",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "dev": "nodemon -w src --ext ts --exec yarn run start"
   },
