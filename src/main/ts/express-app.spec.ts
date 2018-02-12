@@ -3,6 +3,7 @@ import {Router} from 'express';
 import {ExpressApp} from "./express-app";
 import {HealthEndpoint} from "./health-endpoint";
 import {ConcourseEndpoint} from "./concourse-endpoint";
+import {MixedEndpoint} from "./mixed-endpoint";
 
 describe('Class: ExpressApp', () => {
 
@@ -34,5 +35,12 @@ describe('Class: ExpressApp', () => {
         const spy = spyOn(ExpressApp.prototype, 'registerEndpoint').and.stub();
         new ExpressApp(app, Router);
         expect(spy).toHaveBeenCalledWith('/concourse', ConcourseEndpoint);
+    });
+
+    it('registers the MixedEndpoint on /', () => {
+        const app = express();
+        const spy = spyOn(ExpressApp.prototype, 'registerEndpoint').and.stub();
+        new ExpressApp(app, Router);
+        expect(spy).toHaveBeenCalledWith('/', MixedEndpoint);
     });
 });

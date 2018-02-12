@@ -60,8 +60,8 @@ describe('Class: ConcourseTransformer', () => {
         });
         describe('valid Concourse API responses', () => {
             describe('response with 0 pipelines', () => {
-                it('returns {dots: [], ranges: []}', async () => {
-                    const expectedResult = {dots: [], ranges: []};
+                it('returns {url: "concourse url", dots: [], ranges: []}', async () => {
+                    const expectedResult = {url: testConcourseUrl, dots: [], ranges: []};
                     const expectedResponseCode = 200;
                     const expectedResponseBody = [];
                     nock(testConcourseUrl)

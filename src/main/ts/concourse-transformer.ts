@@ -17,6 +17,7 @@ export class ConcourseTransformer {
             // calculate dot array first so length can be used in reduced step
             .map(pipeline => ({...pipeline, dots: pipeline.jobs.map(job => ConcourseTransformer.jobToDot(job))}))
             .reduce((result, pipeline) => ({
+                url: this.concourseUrl,
                 dots: result.dots.concat(...pipeline.dots),
                 ranges: result.ranges.concat({
                     team_name: pipeline.team_name,
@@ -24,7 +25,7 @@ export class ConcourseTransformer {
                     offset: result.dots.length,
                     length: pipeline.dots.length
                 })}),
-                {dots:[], ranges:[]});
+                {url: this.concourseUrl, dots:[], ranges:[]});
     }
 
     public static jobToDot(job: any): any {
