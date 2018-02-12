@@ -37,10 +37,10 @@ describe('Class: ExpressApp', () => {
         expect(spy).toHaveBeenCalledWith('/concourse', ConcourseEndpoint);
     });
 
-    it('registers the MixedEndpoint on /', () => {
+    it('registers the MixedEndpoint on /combined', () => {
         const app = express();
         const spy = spyOn(ExpressApp.prototype, 'registerEndpoint').and.stub();
         new ExpressApp(app, Router);
-        expect(spy).toHaveBeenCalledWith('/', MixedEndpoint);
+        expect(spy).toHaveBeenCalledWith('/combined', MixedEndpoint);
     });
 });

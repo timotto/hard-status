@@ -8,7 +8,7 @@ export class ExpressApp {
         app.set("port", process.env.PORT || 3001);
         this.registerEndpoint('/healthz', HealthEndpoint);
         this.registerEndpoint('/concourse', ConcourseEndpoint);
-        this.registerEndpoint('/', MixedEndpoint);
+        this.registerEndpoint('/combined', MixedEndpoint);
     }
 
     public registerEndpoint(path, endpoint) {
