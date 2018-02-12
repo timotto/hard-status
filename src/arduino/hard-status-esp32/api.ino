@@ -8,8 +8,8 @@
 #include <WiFiClientSecure.h>
 
 bool api_setup_ok = false;
-char api_request[512];
-char api_host[128];
+char api_request[2048];
+char api_host[512];
 int api_port;
 bool api_https;
 
@@ -87,14 +87,16 @@ void setup_api_request() {
   api_port = converted.port;
   api_https = converted.https;
   snprintf(api_request, sizeof(api_request), 
-    "GET %s?%s HTTP/1.0\r\n"
+    "GET %s%s%s HTTP/1.0\r\n"
     "Host: %s\r\n"
     "User-Agent: HardStatus\r\n"
     "X-Chip-Id: %s\r\n"
     "Connection: close\r\n"
     "\r\n", 
-    converted.path, converted.query_string, converted.host, apiId);
-
+    converted.path, 
+    converted.query_string==NULL?"":"?", 
+    converted.query_string==NULL?"":converted.query_string, 
+    converted.host, apiId);
   api_setup_ok = true;
 }
 
