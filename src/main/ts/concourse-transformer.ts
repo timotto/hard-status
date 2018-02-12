@@ -1,12 +1,33 @@
 import * as rp from 'request-promise-native';
+import * as URL from 'url';
 
 export class ConcourseTransformer {
 
+    private team: string = undefined;
+
     constructor(private concourseUrl: string) {
+        this.processConcourseUrl(concourseUrl);
+    }
+
+    private processConcourseUrl(concourseUrl: string) {
+        const parsedUrl = URL.parse(concourseUrl);
+        if ((parsedUrl.path === '' || parsedUrl.path === '/')) {
+            return;
+        }
+
+        const m = parsedUrl.path.match("/teams/([^/]+)$");
+        if (!m) {
+            return;
+        }
+
+        this.concourseUrl = concourseUrl.substr(0, concourseUrl.length - m[0].length);
+        this.team = m[1];
     }
 
     load(): Promise<any> {
-        return this.apiGet('/pipelines')
+        return this.apiGet(this.team === undefined
+            ? '/pipelines'
+            : `/teams/${this.team}/pipelines`)
             .then(pipelines => this.onPipelines(pipelines))
             .then(pipelines => this.sortPipelines(pipelines))
             .then(pipelines => this.transformResults(pipelines));

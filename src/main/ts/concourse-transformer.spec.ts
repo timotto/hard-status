@@ -73,6 +73,26 @@ describe('Class: ConcourseTransformer', () => {
                 });
             });
         });
+        it('loads only one team of the concourseUrl ends in team/${teamName}', async () => {
+            const givenTeamName = 'team-name';
+            const expectedConcourseUrl = 'http://concourse.example.com';
+            const givenConcourseUrl = `${expectedConcourseUrl}/teams/${givenTeamName}`;
+
+            // given
+            unitUnderTest = new ConcourseTransformer(givenConcourseUrl);
+            spyOn((unitUnderTest as any), 'apiGet')
+                .and.returnValue(Promise.resolve());
+
+            // when
+            await unitUnderTest.load()
+                .catch(() => undefined);
+
+            // then
+            expect((unitUnderTest as any).apiGet)
+                .toHaveBeenCalledWith(`/teams/${givenTeamName}/pipelines`);
+            expect((unitUnderTest as any).concourseUrl)
+                .toEqual(expectedConcourseUrl);
+        });
     });
 
     describe('Static Function: parseJobStatus', () => {
