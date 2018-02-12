@@ -18,7 +18,8 @@ export class MixedEndpoint {
                 .map(response => response.dots)
                 .reduce((a,b) => a.concat(...b), []))
             .then(dots => res.send(dots.join('')))
-            .then(() => undefined);
+            .then(() => undefined)
+            .catch(e => res.status(500).send(e));
     }
 
     static allAsArray(x: string | string[] | undefined): string[] {

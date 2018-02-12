@@ -21,7 +21,9 @@ describe('MixedEndpoint', () => {
                 if (path === '/') requestCallback = cb;
         });
 
-        mockResponse = jasmine.createSpyObj<Response>('Response', ['send']);
+        mockResponse = jasmine.createSpyObj<Response>('Response', ['send', 'status']);
+        (mockResponse.send as jasmine.Spy).and.returnValue(mockResponse);
+        (mockResponse.status as jasmine.Spy).and.returnValue(mockResponse);
         mockRequest = jasmine.createSpyObj<Request>('Request', ['nothing']);
         mockRequest.query = {};
 
@@ -128,6 +130,22 @@ describe('MixedEndpoint', () => {
 
             // then
             expect(mockResponse.send).toHaveBeenCalledWith(expectedResponse);
+        });
+        it('responds with a 500 error if the load operation fails', async () => {
+            // given
+            const expectedReason = 'expected reason';
+            (mockConcourseTransformer.load as jasmine.Spy)
+                .and.callFake(() => {
+                    return new Promise(((resolve, reject) => reject(expectedReason)));
+            });
+            mockRequest.query.concourse = '1';
+
+            // when
+            await requestCallback(mockRequest, mockResponse);
+
+            // then
+            expect(mockResponse.status).toHaveBeenCalledWith(500);
+            expect(mockResponse.send).toHaveBeenCalledWith(expectedReason);
         });
     });
 });
