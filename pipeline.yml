@@ -330,25 +330,59 @@ jobs:
     - get: arduinojson-library-source
       trigger: true
       passed: [arduinojson-test]
+  - task: html
+    file: arduino-ci/src/arduino/ci/build-html.yml
   - aggregate:
-    - task: defaults
-      file: arduino-ci/src/arduino/ci/build-defaults.yml
-      params:
-        DEFAULT_NAME: ((firmware.default.name))
-        DEFAULT_PASSWORD: ((firmware.default.password))
-        DEFAULT_API_URL: https://((ingressHostname))/concourse?url=((concourse-url))
-        DEFAULT_OTA_URL: ((firmware.url))
-        DEFAULT_OTA_AUTH: ((firmware.default.ota_auth))
-        DEFAULT_WIFI0_SSID: ((firmware.default.wifi0_ssid))
-        DEFAULT_WIFI0_PSK: ((firmware.default.wifi0_psk))
-    - task: html
-      file: arduino-ci/src/arduino/ci/build-html.yml
-  - task: build
-    image: arduino-esp32-docker-image
-    file: arduino-ci/src/arduino/ci/build-hard-status-esp32.yml
-  - put: lolin32-firmware
-    params:
-      path: lolin32-firmware-build/hard-status-esp32-lolin32.bin
+    - do:
+      - task: defaults
+        file: arduino-ci/src/arduino/ci/build-defaults.yml
+        params:
+          DEFAULT_NAME: ((firmware.default.name))
+          DEFAULT_PASSWORD: ((firmware.default.password))
+          DEFAULT_API_URL: https://((ingressHostname))/concourse?url=((concourse-url))
+          DEFAULT_OTA_URL: ((firmware.url.leds64))
+          DEFAULT_OTA_AUTH: ((firmware.default.ota_auth))
+          DEFAULT_WIFI0_SSID: ((firmware.default.wifi0_ssid))
+          DEFAULT_WIFI0_PSK: ((firmware.default.wifi0_psk))
+        output_mapping:
+          defaults: defaults-64
+      - task: build-64
+        image: arduino-esp32-docker-image
+        file: arduino-ci/src/arduino/ci/build-hard-status-esp32.yml
+        params:
+          LED_COUNT: 64
+        output_mapping:
+          lolin32-firmware-build: lolin32-firmware-build-64
+        input_mapping:
+          defaults: defaults-64
+      - put: lolin32-firmware-64
+        params:
+          path: lolin32-firmware-build-64/hard-status-esp32-lolin32.bin
+    - do:
+      - task: defaults
+        file: arduino-ci/src/arduino/ci/build-defaults.yml
+        params:
+          DEFAULT_NAME: ((firmware.default.name))
+          DEFAULT_PASSWORD: ((firmware.default.password))
+          DEFAULT_API_URL: https://((ingressHostname))/concourse?url=((concourse-url))
+          DEFAULT_OTA_URL: ((firmware.url.leds256))
+          DEFAULT_OTA_AUTH: ((firmware.default.ota_auth))
+          DEFAULT_WIFI0_SSID: ((firmware.default.wifi0_ssid))
+          DEFAULT_WIFI0_PSK: ((firmware.default.wifi0_psk))
+        output_mapping:
+          defaults: defaults-256
+      - task: build-256
+        image: arduino-esp32-docker-image
+        file: arduino-ci/src/arduino/ci/build-hard-status-esp32.yml
+        params:
+          LED_COUNT: 256
+        output_mapping:
+          lolin32-firmware-build: lolin32-firmware-build-256
+        input_mapping:
+          defaults: defaults-256
+      - put: lolin32-firmware-256
+        params:
+          path: lolin32-firmware-build-256/hard-status-esp32-lolin32.bin
 
 resources:
 - name: source-code
@@ -433,11 +467,19 @@ resources:
     - src/arduino/ci/prepare-arduino-esp32-docker.sh
     - src/arduino/ci/prepare-arduino-esp32-docker.yml
 
-- name: lolin32-firmware
+- name: lolin32-firmware-64
   type: curl
   source:
     method: PUT
-    url: ((firmware.url))
+    url: ((firmware.url.leds64))
+    username: ((firmware.username))
+    password: ((firmware.password))
+
+- name: lolin32-firmware-256
+  type: curl
+  source:
+    method: PUT
+    url: ((firmware.url.leds256))
     username: ((firmware.username))
     password: ((firmware.password))
 

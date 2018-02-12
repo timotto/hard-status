@@ -15,6 +15,9 @@ git clone --depth=1 arduinojson-library-source $HOME/Arduino/libraries/ArduinoJs
 
 cp -v "$HTML"/html.h "$SRC"/src/arduino/hard-status-esp32/html.h
 cp -v "$DEFAULTS"/defaults.h "$SRC"/src/arduino/hard-status-esp32/defaults.h
+sed -i "$SRC"/src/arduino/hard-status-esp32/defaults.h \
+    -es/^#define LED_PIXEL_COUNT.*/#define $LED_COUNT/
+cat "$SRC"/src/arduino/hard-status-esp32/defaults.h
 
 cd "$SRC"
 
