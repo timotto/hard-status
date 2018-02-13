@@ -10,9 +10,9 @@ DST="${5:-.}"
 
 mkdir -p $HOME/Arduino/libraries/
 
-git clone --depth=1 neopixelbus-library-source $HOME/Arduino/libraries/NeoPixelBus
-git clone --depth=1 webserver-library-source $HOME/Arduino/libraries/WebServer_tng
-git clone --depth=1 arduinojson-library-source $HOME/Arduino/libraries/ArduinoJson
+git clone neopixelbus-library-source $HOME/Arduino/libraries/NeoPixelBus
+git clone webserver-library-source $HOME/Arduino/libraries/WebServer_tng
+git clone arduinojson-library-source $HOME/Arduino/libraries/ArduinoJson
 
 cp -v "$HTML"/html.h "$SRC"/src/arduino/hard-status-esp32/html.h
 cp -v "$DEFAULTS"/defaults.h "$SRC"/src/arduino/hard-status-esp32/defaults.h
