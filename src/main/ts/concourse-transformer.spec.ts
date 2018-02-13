@@ -98,7 +98,7 @@ describe('Class: ConcourseTransformer', () => {
                 expect(scope.isDone()).toBeTruthy();
             });
         });
-        it('loads only one team of the concourseUrl ends in team/${teamName}', async () => {
+        it('loads only one team if the concourseUrl ends in /teams/${teamName}', async () => {
             const givenTeamName = 'team-name';
             const expectedConcourseUrl = 'http://concourse.example.com';
             const givenConcourseUrl = `${expectedConcourseUrl}/teams/${givenTeamName}`;
