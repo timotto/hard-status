@@ -100,6 +100,7 @@ export class ConcourseTransformer {
     }
 
     private loadJobs(pipeline: any): Promise<any> {
+        pipeline.url = `/teams/${pipeline.team_name}/pipelines/${pipeline.name}`;
         return this.apiGet(`${pipeline.url}/jobs`)
             .then(jobs => Promise.resolve({...pipeline, jobs: jobs}));
     }

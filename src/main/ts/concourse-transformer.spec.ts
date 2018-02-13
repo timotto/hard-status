@@ -73,6 +73,31 @@ describe('Class: ConcourseTransformer', () => {
                 });
             });
         });
+        describe('Concourse 3.9.0 API changes', () => {
+            it('builds the now gone "url" property from "team_name" and "pipeline"', async () => {
+                const expectedTeamName = 'team-name';
+                const expectedPipelineName = 'pipeline-name';
+
+                // given
+                const scope = nock(testConcourseUrl)
+                    .get('/api/v1/pipelines')
+                    .reply(200, [{
+                        "id": 123,
+                        "name": expectedPipelineName,
+                        "paused": false,
+                        "public": true,
+                        "team_name": expectedTeamName
+                    }])
+                    .get(`/api/v1/teams/${expectedTeamName}/pipelines/${expectedPipelineName}/jobs`)
+                    .reply(200, []);
+
+                // when
+                await unitUnderTest.load();
+
+                // then
+                expect(scope.isDone()).toBeTruthy();
+            });
+        });
         it('loads only one team of the concourseUrl ends in team/${teamName}', async () => {
             const givenTeamName = 'team-name';
             const expectedConcourseUrl = 'http://concourse.example.com';
