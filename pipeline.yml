@@ -167,7 +167,7 @@ jobs:
         load: release-rc
         tag: version/number
         tag_prefix: v
-        tag_as_latest: false
+        tag_as_latest: true
   - put: version
     params:
       file: version/number
