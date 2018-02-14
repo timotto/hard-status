@@ -66,6 +66,7 @@ void parse_url(const char *url, struct url_parser_url_t *parsed_url) {
     path = (char *) realloc(path, sizeof(char) * (strlen(token) + 2));
     strcpy(path, "/");
     strcat(path, token);
+    path[strlen(token) + 1] = 0;
 
     parsed_url->path = (char *) malloc(sizeof(char) * strlen(path) + 1);
     strncpy(parsed_url->path, path, strlen(path));
@@ -75,12 +76,14 @@ void parse_url(const char *url, struct url_parser_url_t *parsed_url) {
   } else {
     parsed_url->path = (char *) malloc(sizeof(char) * 2);
     strcpy(parsed_url->path, "/");
+    parsed_url->path[1] = 0;
   }
 
   token = strtok_r(NULL, "?", &token_ptr);
   if (token) {
-    parsed_url->query_string = (char *) malloc(sizeof(char) * (strlen(token) + 1));
+    parsed_url->query_string = (char *) malloc(sizeof(char) * (strlen(token) + 2));
     strncpy(parsed_url->query_string, token, strlen(token));
+    parsed_url->query_string[strlen(token)] = 0;
   } else {
     parsed_url->query_string = NULL;
   }
