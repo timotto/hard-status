@@ -1,6 +1,7 @@
 import {Router, Request, Response} from 'express';
 import {MixedEndpoint} from "./mixed-endpoint";
 import {ConcourseTransformer} from "./concourse-transformer";
+import {DavidDmTransformer} from "./david-dm-transformer";
 
 describe('MixedEndpoint', () => {
     let unitUnderTest: MixedEndpoint;
@@ -13,6 +14,7 @@ describe('MixedEndpoint', () => {
         return Promise.reject(reason);
     };
     let mockConcourseTransformer: ConcourseTransformer;
+    let mockDavidDmTransformer: DavidDmTransformer;
 
     beforeEach(() => {
         mockRouter = jasmine.createSpyObj<Router>('Router', ['get']);
@@ -33,6 +35,13 @@ describe('MixedEndpoint', () => {
 
         spyOn(MixedEndpoint, 'getConcourseTransformerFor')
             .and.returnValue(mockConcourseTransformer);
+
+        mockDavidDmTransformer = jasmine.createSpyObj<DavidDmTransformer>('DavidDmTransformer', ['load']);
+        (mockDavidDmTransformer.load as jasmine.Spy)
+            .and.returnValue({url: 'url', dots: []});
+
+        spyOn(MixedEndpoint, 'getDavidDmTransformerFor')
+            .and.returnValue(mockDavidDmTransformer);
 
         unitUnderTest = new MixedEndpoint(mockRouter);
     });
@@ -76,7 +85,21 @@ describe('MixedEndpoint', () => {
             expect(MixedEndpoint.allAsArray)
                 .toHaveBeenCalledWith(expectedArgument);
         });
-        it('calls load on a ConcourseTransformer instance for each URL', async() => {
+        it('calls allAsArray on the req.query["david-dm"] value', () => {
+            const expectedArgument = 'expected argument';
+            mockRequest.query['david-dm'] = expectedArgument;
+
+            spyOn(MixedEndpoint, 'allAsArray')
+                .and.returnValue([]);
+
+            // when
+            (unitUnderTest as any).requestHandler(mockRequest, mockResponse);
+
+            // then
+            expect(MixedEndpoint.allAsArray)
+                .toHaveBeenCalledWith(expectedArgument);
+        });
+        it('calls load on a ConcourseTransformer instance for each concourse URL', async() => {
             // given
             const givenUrl1 = 'url 1';
             const givenUrl2 = 'url 2';
@@ -92,24 +115,44 @@ describe('MixedEndpoint', () => {
 
             expect(mockConcourseTransformer.load).toHaveBeenCalledTimes(2);
         });
+        it('calls load on a DavidDmTransformer instance for each david-dm parameter', async() => {
+            // given
+            const givenUrl1 = 'owner1/repo1';
+            const givenUrl2 = 'owner2/repo8';
+            mockRequest.query['david-dm'] = [givenUrl1, givenUrl2];
+
+            // when
+            await requestCallback(mockRequest, mockResponse);
+
+            // then
+            expect(MixedEndpoint.getDavidDmTransformerFor).toHaveBeenCalledTimes(2);
+            expect(MixedEndpoint.getDavidDmTransformerFor).toHaveBeenCalledWith(givenUrl1);
+            expect(MixedEndpoint.getDavidDmTransformerFor).toHaveBeenCalledWith(givenUrl2);
+
+            expect(mockDavidDmTransformer.load).toHaveBeenCalledTimes(2);
+        });
         it('responds with a concatenation of the dots arrays of the responses', async() => {
             const dots1 = ['1a','1b','1c'];
             const dots2 = ['2a','2b','2c'];
             const dots3 = ['3a','3b','3c'];
+            const david1 = ['++','--','=='];
 
             // given
             (mockConcourseTransformer.load as jasmine.Spy)
                 .and.returnValues({url: 'url', dots: dots1}, {url: 'url', dots: dots2}, {url: 'url', dots: dots3});
+            (mockDavidDmTransformer.load as jasmine.Spy)
+                .and.returnValues({url: 'url', dots: david1});
             mockRequest.query.concourse = ['1','2','3'];
+            mockRequest.query['david-dm'] = ['9'];
 
             // when
             await requestCallback(mockRequest, mockResponse);
 
             // then
             expect(mockResponse.send)
-                .toHaveBeenCalledWith(dots1.concat(...dots2).concat(...dots3).join(''));
+                .toHaveBeenCalledWith(dots1.concat(...dots2).concat(...dots3).concat(...david1).join(''));
         });
-        it('sorts the response by the concourse url', async() => {
+        it('sorts the response by url', async() => {
             const response1 = {url: '7', dots: ['1a','1b','1c']};
             const response2 = {url: '1', dots: ['2a','2b','2c']};
             const response3 = {url: '2', dots: ['3a','3b','3c']};
@@ -177,6 +220,19 @@ describe('MixedEndpoint util functions', () => {
             // then
             expect(actualResult.constructor.name).toEqual('ConcourseTransformer');
             expect((actualResult as any).concourseUrl).toEqual(givenUrl);
+        });
+    });
+    describe('getDavidDmTransformerFor', () => {
+        it('returns a new DavidDmTransformer instance for the given path', () => {
+            // given
+            const givenPath = 'some/repo';
+
+            // when
+            const actualResult = MixedEndpoint.getDavidDmTransformerFor(givenPath);
+
+            // then
+            expect(actualResult.constructor.name).toEqual('DavidDmTransformer');
+            expect((actualResult as any).githubRepoPath).toEqual(givenPath);
         });
     });
 });

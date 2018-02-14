@@ -1,6 +1,7 @@
 import {Router, Request, Response} from 'express';
 import {ConcourseTransformer} from "./concourse-transformer";
 import {HardStatusResponse} from "./hard-status-response";
+import {DavidDmTransformer} from "./david-dm-transformer";
 
 export class MixedEndpoint {
     constructor(readonly router: Router) {
@@ -12,8 +13,12 @@ export class MixedEndpoint {
             .map(url =>
                 MixedEndpoint.getConcourseTransformerFor(url)
                     .load());
+        const promises2: Promise<HardStatusResponse>[] = MixedEndpoint.allAsArray(req.query['david-dm'])
+            .map(url =>
+                MixedEndpoint.getDavidDmTransformerFor(url)
+                    .load());
 
-        return Promise.all(promises)
+        return Promise.all(promises.concat(...promises2))
             .then(responses => responses
                 .sort((a,b) => a.url.localeCompare(b.url))
                 .map(response => response.dots)
@@ -33,5 +38,9 @@ export class MixedEndpoint {
 
     static getConcourseTransformerFor(url: string): ConcourseTransformer {
         return new ConcourseTransformer(url);
+    }
+
+    static getDavidDmTransformerFor(path: string): DavidDmTransformer {
+        return new DavidDmTransformer(path);
     }
 }
