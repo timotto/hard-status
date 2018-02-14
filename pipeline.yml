@@ -410,6 +410,38 @@ jobs:
       - put: lolin32-firmware-256
         params:
           path: lolin32-firmware-build-256/hard-status-esp32-lolin32.bin
+    - do:
+      - aggregate:
+        - task: defaults
+          file: arduino-ci/src/arduino/ci/build-defaults.yml
+          params:
+            DEFAULT_NAME: ((firmware.default.name))
+            DEFAULT_PASSWORD: ((firmware.default.password))
+            DEFAULT_API_URL: https://((ingressHostname))/concourse?url=((concourse-url))
+            DEFAULT_OTA_URL: ((firmware.url.leds384))
+            DEFAULT_OTA_AUTH: ((firmware.default.ota_auth))
+            DEFAULT_WIFI0_SSID: ((firmware.default.wifi0_ssid))
+            DEFAULT_WIFI0_PSK: ((firmware.default.wifi0_psk))
+          output_mapping:
+            defaults: defaults-384
+        - task: hardware
+          file: arduino-ci/src/arduino/ci/build-hardware.yml
+          params:
+            LED_COUNT: 384
+            LED_PIN: 5
+          output_mapping:
+            hardware: hardware-384
+      - task: build-384
+        image: arduino-esp32-docker-image
+        file: arduino-ci/src/arduino/ci/build-hard-status-esp32.yml
+        output_mapping:
+          lolin32-firmware-build: lolin32-firmware-build-384
+        input_mapping:
+          defaults: defaults-384
+          hardware: hardware-384
+      - put: lolin32-firmware-384
+        params:
+          path: lolin32-firmware-build-256/hard-status-esp32-lolin32.bin
 
 resources:
 - name: source-code
@@ -508,6 +540,14 @@ resources:
   source:
     method: PUT
     url: ((firmware.url.leds256))
+    username: ((firmware.username))
+    password: ((firmware.password))
+
+- name: lolin32-firmware-384
+  type: curl
+  source:
+    method: PUT
+    url: ((firmware.url.leds384))
     username: ((firmware.username))
     password: ((firmware.password))
 
