@@ -7,6 +7,5 @@ apt-get install -y make gcc
 
 cd ${1:-.}
 
-cmake .
 make
 make check
