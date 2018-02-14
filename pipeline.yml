@@ -15,6 +15,7 @@ groups:
   - arduino-esp32-docker-build
   - arduino-esp32-docker-promotion
   - arduinojson-test
+  - libyuarel-test
   - hard-status-esp32
 - name: backend
   jobs:
@@ -34,6 +35,7 @@ groups:
   - arduino-esp32-docker-build
   - arduino-esp32-docker-promotion
   - arduinojson-test
+  - libyuarel-test
   - hard-status-esp32
 
 jobs:
@@ -314,6 +316,14 @@ jobs:
   - task: test
     file: arduino-ci/src/arduino/ci/test-arduinojson.yml
 
+- name: libyuarel-test
+  plan:
+  - get: libyuarel-library-source
+    trigger: true
+  - get: arduino-ci
+  - task: test
+    file: arduino-ci/src/arduino/ci/test-libyuarel.yml
+
 - name: hard-status-esp32
   plan:
   - aggregate:
@@ -330,6 +340,9 @@ jobs:
     - get: arduinojson-library-source
       trigger: true
       passed: [arduinojson-test]
+    - get: libyuarel-library-source
+      trigger: true
+      passed: [libyuarel-test]
   - task: html
     file: arduino-ci/src/arduino/ci/build-html.yml
   - aggregate:
@@ -546,6 +559,11 @@ resources:
   type: git
   source:
     uri: https://github.com/bbx10/WebServer_tng.git
+
+- name: libyuarel-library-source
+  type: git
+  source:
+    uri: https://github.com/jacketizer/libyuarel.git
 
 resource_types:
 - name: helm

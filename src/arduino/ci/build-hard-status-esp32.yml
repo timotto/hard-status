@@ -5,6 +5,7 @@ inputs:
 - name: neopixelbus-library-source
 - name: webserver-library-source
 - name: arduinojson-library-source
+- name: libyuarel-library-source
 - name: html
 - name: defaults
 - name: hardware
