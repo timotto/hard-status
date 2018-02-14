@@ -1,5 +1,6 @@
 import * as rp from 'request-promise-native';
 import * as URL from 'url';
+import {HardStatusResponse} from "./hard-status-response";
 
 export class ConcourseTransformer {
 
@@ -24,7 +25,7 @@ export class ConcourseTransformer {
         this.team = m[1];
     }
 
-    load(): Promise<any> {
+    load(): Promise<HardStatusResponse> {
         return this.apiGet(this.team === undefined
             ? '/pipelines'
             : `/teams/${this.team}/pipelines`)
@@ -33,7 +34,7 @@ export class ConcourseTransformer {
             .then(pipelines => this.transformResults(pipelines));
     }
 
-    private transformResults(results: any[]): any {
+    private transformResults(results: any[]): HardStatusResponse {
         return results
             // calculate dot array first so length can be used in reduced step
             .map(pipeline => ({...pipeline, dots: pipeline.jobs.map(job => ConcourseTransformer.jobToDot(job))}))

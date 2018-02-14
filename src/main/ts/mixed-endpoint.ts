@@ -1,5 +1,6 @@
 import {Router, Request, Response} from 'express';
 import {ConcourseTransformer} from "./concourse-transformer";
+import {HardStatusResponse} from "./hard-status-response";
 
 export class MixedEndpoint {
     constructor(readonly router: Router) {
@@ -7,7 +8,7 @@ export class MixedEndpoint {
     }
 
     private requestHandler(req: Request, res: Response): Promise<void> {
-        const promises = MixedEndpoint.allAsArray(req.query['concourse'])
+        const promises: Promise<HardStatusResponse>[] = MixedEndpoint.allAsArray(req.query['concourse'])
             .map(url =>
                 MixedEndpoint.getConcourseTransformerFor(url)
                     .load());

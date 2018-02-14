@@ -1,6 +1,7 @@
-import {Router, Request, Response, NextFunction} from 'express';
+import {Router, Request, Response} from 'express';
 import {ConcourseTransformer} from "./concourse-transformer";
 import * as accepts from 'accepts';
+import {HardStatusResponse} from "./hard-status-response";
 
 export class ConcourseEndpoint {
 
@@ -15,7 +16,7 @@ export class ConcourseEndpoint {
         return this.formatResponse(req, res, new ConcourseTransformer(url).load());
     }
 
-    private formatResponse(req: Request, res: Response, loadPromise: Promise<any>) {
+    private formatResponse(req: Request, res: Response, loadPromise: Promise<HardStatusResponse>) {
         const accept = accepts(req);
         let responder: Responder;
         switch (accept.type(['text/short', 'text/json'])) {
@@ -34,7 +35,7 @@ export class ConcourseEndpoint {
 abstract class Responder {
     constructor(protected res: Response) {
     }
-    public abstract then(result: any);
+    public abstract then(result: HardStatusResponse);
     public catch(error: Error) {
         this.res.status(500);
         return this._catch(error);
@@ -43,7 +44,7 @@ abstract class Responder {
 }
 
 class TextResponder extends Responder {
-    then(result: any) {
+    then(result: HardStatusResponse) {
         return this.res.send(result.dots.join(''));
     }
 
@@ -57,7 +58,7 @@ class JsonResponder extends Responder {
         return this.res.send({message: error.message});
     }
 
-    then(result: any): any {
+    then(result: HardStatusResponse): any {
         return this.res.json(result);
     }
 }
