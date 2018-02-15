@@ -1,0 +1,16 @@
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: wtnb75/openscad
+inputs:
+- name: openscad-source
+outputs:
+- name: stl-output
+run:
+  path: openscad
+  args:
+  - -o
+  - stl-output/$OUTPUT_FILENAME
+  - --render
+  - openscad-source/$INPUT_FILENAME

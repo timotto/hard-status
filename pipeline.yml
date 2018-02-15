@@ -19,6 +19,7 @@ groups:
   - arduinojson-test
   - libyuarel-test
   - hard-status-esp32
+  - 3d
 - name: backend
   jobs:
   - unit
@@ -41,6 +42,9 @@ groups:
   - arduinojson-test
   - libyuarel-test
   - hard-status-esp32
+- name: physibles
+  jobs:
+  - 3d
 
 jobs:
 - name: unit
@@ -522,6 +526,26 @@ jobs:
         params:
           path: lolin32-firmware-build-384/hard-status-esp32-lolin32.bin
 
+- name: 3d
+  plan:
+  - get: 3d-source
+    trigger: true
+  - aggregate:
+    - task: build-diffusor-stl
+      file: 3d-source/src/3d/ci/build-stl.yml
+      input_mapping:
+        3d-source: openscad-source
+      params:
+        INPUT_FILENAME: src/3d/openscad/cube.scad
+        OUTPUT_FILENAME: cube.stl
+    - task: build-cube-stl
+      file: 3d-source/src/3d/ci/build-stl.yml
+      input_mapping:
+        3d-source: openscad-source
+      params:
+        INPUT_FILENAME: src/3d/openscad/cube.scad
+        OUTPUT_FILENAME: cube.stl
+
 resources:
 - name: source-code
   type: git
@@ -702,6 +726,14 @@ resources:
   type: git
   source:
     uri: https://github.com/jacketizer/libyuarel.git
+
+- name: 3d-source
+  type: git
+  source:
+    <<: *project-source
+    paths:
+    - src/3d/openscad
+    - src/3d/ci
 
 resource_types:
 - name: helm
