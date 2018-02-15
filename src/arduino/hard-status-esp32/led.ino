@@ -28,7 +28,7 @@ animation_state_t led_animation_state[LED_PIXEL_COUNT];
 AnimEaseFunction easings[] = {NeoEase::CubicIn, NeoEase::CubicOut};
 
 RgbColor red(255, 0, 0);
-RgbColor orange(255, 191, 0);
+RgbColor orange(255, 165, 0);
 RgbColor green(0, 255, 0);
 RgbColor yellow(191, 191, 0);
 RgbColor blue(0, 0, 127);
