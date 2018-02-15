@@ -2,6 +2,7 @@ import {Router, Request, Response} from 'express';
 import {MixedEndpoint} from "./mixed-endpoint";
 import {ConcourseTransformer} from "./concourse-transformer";
 import {DavidDmTransformer} from "./david-dm-transformer";
+import {CoverallsTransformer} from "./coveralls-transformer";
 
 describe('MixedEndpoint', () => {
     let unitUnderTest: MixedEndpoint;
@@ -15,6 +16,7 @@ describe('MixedEndpoint', () => {
     };
     let mockConcourseTransformer: ConcourseTransformer;
     let mockDavidDmTransformer: DavidDmTransformer;
+    let mockCoverallsTransformer: CoverallsTransformer;
 
     beforeEach(() => {
         mockRouter = jasmine.createSpyObj<Router>('Router', ['get']);
@@ -42,6 +44,13 @@ describe('MixedEndpoint', () => {
 
         spyOn(MixedEndpoint, 'getDavidDmTransformerFor')
             .and.returnValue(mockDavidDmTransformer);
+
+        mockCoverallsTransformer = jasmine.createSpyObj<CoverallsTransformer>('CoverallsTransformer', ['load']);
+        (mockCoverallsTransformer.load as jasmine.Spy)
+            .and.returnValue({url: 'url', dots: []});
+
+        spyOn(MixedEndpoint, 'getCoverallsTransformerFor')
+            .and.returnValue(mockCoverallsTransformer);
 
         unitUnderTest = new MixedEndpoint(mockRouter);
     });
@@ -99,6 +108,20 @@ describe('MixedEndpoint', () => {
             expect(MixedEndpoint.allAsArray)
                 .toHaveBeenCalledWith(expectedArgument);
         });
+        it('calls allAsArray on the req.query["coveralls"] value', () => {
+            const expectedArgument = 'expected argument';
+            mockRequest.query['coveralls'] = expectedArgument;
+
+            spyOn(MixedEndpoint, 'allAsArray')
+                .and.returnValue([]);
+
+            // when
+            (unitUnderTest as any).requestHandler(mockRequest, mockResponse);
+
+            // then
+            expect(MixedEndpoint.allAsArray)
+                .toHaveBeenCalledWith(expectedArgument);
+        });
         it('calls load on a ConcourseTransformer instance for each concourse URL', async() => {
             // given
             const givenUrl1 = 'url 1';
@@ -131,26 +154,51 @@ describe('MixedEndpoint', () => {
 
             expect(mockDavidDmTransformer.load).toHaveBeenCalledTimes(2);
         });
+        it('calls load on a CoverallsTransformer instance for each coveralls parameter', async() => {
+            // given
+            const givenUrl1 = 'owner1/repo1';
+            const givenUrl2 = 'owner2/repo8';
+            mockRequest.query['coveralls'] = [givenUrl1, givenUrl2];
+
+            // when
+            await requestCallback(mockRequest, mockResponse);
+
+            // then
+            expect(MixedEndpoint.getCoverallsTransformerFor).toHaveBeenCalledTimes(2);
+            expect(MixedEndpoint.getCoverallsTransformerFor).toHaveBeenCalledWith(givenUrl1);
+            expect(MixedEndpoint.getCoverallsTransformerFor).toHaveBeenCalledWith(givenUrl2);
+
+            expect(mockCoverallsTransformer.load).toHaveBeenCalledTimes(2);
+        });
         it('responds with a concatenation of the dots arrays of the responses', async() => {
             const dots1 = ['1a','1b','1c'];
             const dots2 = ['2a','2b','2c'];
             const dots3 = ['3a','3b','3c'];
             const david1 = ['++','--','=='];
+            const coveralls = ['xx','x1','x2'];
 
             // given
             (mockConcourseTransformer.load as jasmine.Spy)
-                .and.returnValues({url: 'url', dots: dots1}, {url: 'url', dots: dots2}, {url: 'url', dots: dots3});
+                .and.returnValues({url: 'url1', dots: dots1}, {url: 'url2', dots: dots2}, {url: 'url3', dots: dots3});
             (mockDavidDmTransformer.load as jasmine.Spy)
-                .and.returnValues({url: 'url', dots: david1});
+                .and.returnValues({url: 'url8', dots: david1});
+            (mockCoverallsTransformer.load as jasmine.Spy)
+                .and.returnValues({url: 'url9', dots: coveralls});
             mockRequest.query.concourse = ['1','2','3'];
-            mockRequest.query['david-dm'] = ['9'];
+            mockRequest.query['david-dm'] = ['8'];
+            mockRequest.query['coveralls'] = ['9'];
 
             // when
             await requestCallback(mockRequest, mockResponse);
 
             // then
             expect(mockResponse.send)
-                .toHaveBeenCalledWith(dots1.concat(...dots2).concat(...dots3).concat(...david1).join(''));
+                .toHaveBeenCalledWith(dots1
+                    .concat(...dots2)
+                    .concat(...dots3)
+                    .concat(...david1)
+                    .concat(...coveralls)
+                    .join(''));
         });
         it('sorts the response by url', async() => {
             const response1 = {url: '7', dots: ['1a','1b','1c']};
@@ -194,7 +242,7 @@ describe('MixedEndpoint', () => {
 });
 
 describe('MixedEndpoint util functions', () => {
-    describe('allAsArray', () => {
+    describe('Static Function: allAsArray', () => {
         it('returns an empty array for undefined', () =>
             expect(MixedEndpoint.allAsArray(undefined)).toEqual([]));
         it('returns a single item array for a string', () => {
@@ -209,7 +257,7 @@ describe('MixedEndpoint util functions', () => {
             expect(actualResult).toEqual(arrayItem);
         });
     });
-    describe('getConcourseTransformerFor', () => {
+    describe('Static Function: getConcourseTransformerFor', () => {
         it('returns a new ConcourseTransformer instance for the given url', () => {
             // given
             const givenUrl = 'http://example.com';
@@ -222,7 +270,7 @@ describe('MixedEndpoint util functions', () => {
             expect((actualResult as any).concourseUrl).toEqual(givenUrl);
         });
     });
-    describe('getDavidDmTransformerFor', () => {
+    describe('Static Function: getDavidDmTransformerFor', () => {
         it('returns a new DavidDmTransformer instance for the given path', () => {
             // given
             const givenPath = 'some/repo';
@@ -232,6 +280,19 @@ describe('MixedEndpoint util functions', () => {
 
             // then
             expect(actualResult.constructor.name).toEqual('DavidDmTransformer');
+            expect((actualResult as any).githubRepoPath).toEqual(givenPath);
+        });
+    });
+    describe('Static Function: getCoverallsTransformerFor', () => {
+        it('returns a new DavidDmTransformer instance for the given path', () => {
+            // given
+            const givenPath = 'some/repo';
+
+            // when
+            const actualResult = MixedEndpoint.getCoverallsTransformerFor(givenPath);
+
+            // then
+            expect(actualResult.constructor.name).toEqual('CoverallsTransformer');
             expect((actualResult as any).githubRepoPath).toEqual(givenPath);
         });
     });
