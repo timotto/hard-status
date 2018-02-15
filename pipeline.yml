@@ -520,7 +520,7 @@ jobs:
           hardware: hardware-384
       - put: lolin32-firmware-384
         params:
-          path: lolin32-firmware-build-256/hard-status-esp32-lolin32.bin
+          path: lolin32-firmware-build-384/hard-status-esp32-lolin32.bin
 
 resources:
 - name: source-code
