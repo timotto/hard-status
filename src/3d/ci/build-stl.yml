@@ -4,11 +4,11 @@ image_resource:
   source:
     repository: wtnb75/openscad
 inputs:
-- name: openscad-source
+- name: 3d-source
 outputs:
-- name: stl-output
+- name: stl
 run:
-  path: openscad
+  path: 3d-source
   args:
   - -o
   - stl-output/$OUTPUT_FILENAME

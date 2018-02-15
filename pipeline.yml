@@ -533,18 +533,12 @@ jobs:
   - aggregate:
     - task: build-diffusor-stl
       file: 3d-source/src/3d/ci/build-stl.yml
-      input_mapping:
-        3d-source: openscad-source
       params:
-        INPUT_FILENAME: src/3d/openscad/cube.scad
-        OUTPUT_FILENAME: cube.stl
+        NAME: diffusor
     - task: build-cube-stl
       file: 3d-source/src/3d/ci/build-stl.yml
-      input_mapping:
-        3d-source: openscad-source
       params:
-        INPUT_FILENAME: src/3d/openscad/cube.scad
-        OUTPUT_FILENAME: cube.stl
+        NAME: cube
 
 resources:
 - name: source-code
