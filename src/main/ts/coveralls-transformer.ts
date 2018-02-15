@@ -5,7 +5,7 @@ export class CoverallsTransformer {
     constructor(private githubRepoPath: string) {
         if (githubRepoPath === undefined)
             throw 'githubRepoPath cannot be undefined';
-        if (!githubRepoPath.match("^[0-9a-zA-Z]+/[0-9a-zA-Z]+$"))
+        if (!githubRepoPath.match("^[0-9a-zA-Z-_]+/[0-9a-zA-Z-_]+$"))
             throw 'githubRepoPath is not a plausible GitHub repository path';
     }
 

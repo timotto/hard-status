@@ -37,6 +37,10 @@ describe('Class: CoverallsTransformer', () => {
                 }
             });
         });
+        it('accepts plausible github repo values', () => {
+            ['owner/repo','owner-name/repo-name','0123owner/repo322'].forEach(
+                value => new CoverallsTransformer(value));
+        });
     });
     describe('Function: load', () => {
         it('executes a HEAD request on the Coveralls badge URL', async () => {
