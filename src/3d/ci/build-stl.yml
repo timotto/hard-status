@@ -6,6 +6,6 @@ image_resource:
 inputs:
 - name: 3d-source
 outputs:
-- name: stl
+- name: stl-output
 run:
   path: 3d-source/src/3d/ci/build-stl.sh
