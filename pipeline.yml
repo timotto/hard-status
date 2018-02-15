@@ -3,6 +3,7 @@ groups:
   jobs:
   - unit
   - build-rc
+  - build-arm
   - integration
   - single-integration
   - promote
@@ -10,6 +11,7 @@ groups:
   - bump-minor
   - bump-major
   - deploy
+  - deploy-rpi
   - arduino-docker-build
   - arduino-docker-promotion
   - arduino-esp32-docker-build
@@ -21,6 +23,7 @@ groups:
   jobs:
   - unit
   - build-rc
+  - build-arm
   - integration
   - single-integration
   - promote
@@ -28,6 +31,7 @@ groups:
   - bump-minor
   - bump-major
   - deploy
+  - deploy-rpi
 - name: esp32-firmware
   jobs:
   - arduino-docker-build
@@ -75,6 +79,29 @@ jobs:
   - put: version
     params:
       file: version/number
+
+- name: build-arm
+  serial_groups: [version]
+  plan:
+  - aggregate:
+    - get: source-code
+      trigger: true
+      passed: [integration,single-integration]
+    - get: version
+      passed: [integration,single-integration]
+    - get: release
+      trigger: true
+      params:
+        skip_download: true
+      passed: [integration,single-integration]
+  - aggregate:
+    - put: release-arm
+      params:
+        build: source-code
+        tag: version/number
+        tag_prefix: v
+        tag_as_latest: false
+
 - name: integration
   serial_groups: [cloud-it]
   plan:
@@ -152,21 +179,33 @@ jobs:
   plan:
   - aggregate:
     - get: source-code
-      passed: [integration, single-integration]
+      passed: [build-arm]
     - get: release-rc
       resource: release
       trigger: true
-      passed: [integration, single-integration]
+      passed: [build-arm]
+      params:
+        save: true
+    - get: release-arm-rc
+      resource: release-arm
+      trigger: true
+      passed: [build-arm]
       params:
         save: true
     - get: version
-      passed: [integration, single-integration]
+      passed: [build-arm]
       params:
         bump: final
   - aggregate:
     - put: release
       params:
         load: release-rc
+        tag: version/number
+        tag_prefix: v
+        tag_as_latest: true
+    - put: release-arm-plain
+      params:
+        load: release-arm-rc
         tag: version/number
         tag_prefix: v
         tag_as_latest: true
@@ -178,6 +217,10 @@ jobs:
   serial_groups: [version]
   plan:
   - get: release
+    trigger: true
+    passed: [promote]
+    params: {skip_download: true}
+  - get: release-arm-plain
     trigger: true
     passed: [promote]
     params: {skip_download: true}
@@ -232,6 +275,42 @@ jobs:
         value: ((ingressHostname))
       - key: serviceType
         value: ClusterIP
+
+- name: deploy-rpi
+  serial_groups: [helm-rpi]
+  plan:
+  - aggregate:
+    - get: source-code
+      passed: [promote]
+    - get: release-arm-plain
+      passed: [promote]
+      trigger: true
+      params:
+        skip_download: true
+    - get: version
+      trigger: true
+      passed: [promote]
+  - task: create-chart
+    file: source-code/src/main/ci/create-chart.yml
+    params:
+      version: ((chartVersion))
+  - put: helm-rpi
+    params:
+      chart: chart/hard-status-((chartVersion)).tgz
+      wait_until_ready: 120
+      replace: true
+      override_values:
+      - key: imageSecret
+        value: ((cluster2.secret_name))
+      - key: ingressHostname
+        value: ((ingressRpiHostname))
+      - key: serviceType
+        value: NodePort
+      - key: imageName
+        value: ((arm-backend-image-name))
+      - key: redisDockerImage
+        value: knjcode/rpi-redis
+
 
 - name: arduino-docker-build
   plan:
@@ -471,6 +550,21 @@ resources:
     username: ((docker.username))
     password: ((docker.password))
 
+- name: release-arm
+  type: remote-docker-image
+  source:
+    repository: ((project-registry))/((arm-backend-image-name))
+    username: ((docker.username))
+    password: ((docker.password))
+    dockerd: ((dockerd))
+
+- name: release-arm-plain
+  type: docker-image
+  source:
+    repository: ((project-registry))/((arm-backend-image-name))
+    username: ((docker.username))
+    password: ((docker.password))
+
 - name: redis-runtime
   type: docker-image
   source:
@@ -492,6 +586,10 @@ resources:
 - name: helm-cloud-it
   type: helm
   source: ((cluster1it))
+
+- name: helm-rpi
+  type: helm
+  source: ((cluster2))
 
 - name: hard-status-esp32-source
   type: git
@@ -616,6 +714,12 @@ resource_types:
   source:
     repository: timotto/concourse-curl-resource
     tag: latest
+
+- name: remote-docker-image
+  type: docker-image
+  source:
+    repository: timotto/docker-image-resource
+  privileged: true
 
 project-source: &project-source
   uri: ((git.uri))
