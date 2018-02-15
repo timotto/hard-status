@@ -8,9 +8,4 @@ inputs:
 outputs:
 - name: stl
 run:
-  path: 3d-source
-  args:
-  - -o
-  - stl-output/$OUTPUT_FILENAME
-  - --render
-  - openscad-source/$INPUT_FILENAME
+  path: 3d-source/src/3d/ci/build-stl.sh
