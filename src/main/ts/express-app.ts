@@ -2,6 +2,7 @@ import {Router} from "express";
 import {ConcourseEndpoint} from "./concourse-endpoint";
 import {HealthEndpoint} from "./health-endpoint";
 import {MixedEndpoint} from "./mixed-endpoint";
+import {ManagedEndpoint} from "./managed-endpoint";
 
 export class ExpressApp {
     constructor(readonly app, private router: () => Router) {
@@ -9,6 +10,7 @@ export class ExpressApp {
         this.registerEndpoint('/healthz', HealthEndpoint);
         this.registerEndpoint('/concourse', ConcourseEndpoint);
         this.registerEndpoint('/combined', MixedEndpoint);
+        this.registerEndpoint('/managed', ManagedEndpoint);
     }
 
     public registerEndpoint(path, endpoint) {

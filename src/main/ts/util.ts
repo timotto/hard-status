@@ -22,4 +22,13 @@ export class Util {
     static getCoverallsTransformerFor(path: string): CoverallsTransformer {
         return new CoverallsTransformer(path);
     }
+
+    public static envOrDefault(envKey: string, defaultValue: string): string {
+        let value = process.env[envKey];
+        if (value === undefined) {
+            return defaultValue;
+        }
+
+        return value;
+    }
 }
