@@ -3,6 +3,7 @@ import {MixedEndpoint} from "./mixed-endpoint";
 import {ConcourseTransformer} from "./concourse-transformer";
 import {DavidDmTransformer} from "./david-dm-transformer";
 import {CoverallsTransformer} from "./coveralls-transformer";
+import {Util} from "./util";
 
 describe('MixedEndpoint', () => {
     let unitUnderTest: MixedEndpoint;
@@ -35,21 +36,21 @@ describe('MixedEndpoint', () => {
         (mockConcourseTransformer.load as jasmine.Spy)
             .and.returnValue({url: 'url', dots: []});
 
-        spyOn(MixedEndpoint, 'getConcourseTransformerFor')
+        spyOn(Util, 'getConcourseTransformerFor')
             .and.returnValue(mockConcourseTransformer);
 
         mockDavidDmTransformer = jasmine.createSpyObj<DavidDmTransformer>('DavidDmTransformer', ['load']);
         (mockDavidDmTransformer.load as jasmine.Spy)
             .and.returnValue({url: 'url', dots: []});
 
-        spyOn(MixedEndpoint, 'getDavidDmTransformerFor')
+        spyOn(Util, 'getDavidDmTransformerFor')
             .and.returnValue(mockDavidDmTransformer);
 
         mockCoverallsTransformer = jasmine.createSpyObj<CoverallsTransformer>('CoverallsTransformer', ['load']);
         (mockCoverallsTransformer.load as jasmine.Spy)
             .and.returnValue({url: 'url', dots: []});
 
-        spyOn(MixedEndpoint, 'getCoverallsTransformerFor')
+        spyOn(Util, 'getCoverallsTransformerFor')
             .and.returnValue(mockCoverallsTransformer);
 
         unitUnderTest = new MixedEndpoint(mockRouter);
@@ -84,42 +85,42 @@ describe('MixedEndpoint', () => {
             const expectedArgument = 'expected argument';
             mockRequest.query.concourse = expectedArgument;
 
-            spyOn(MixedEndpoint, 'allAsArray')
+            spyOn(Util, 'allAsArray')
                 .and.returnValue([]);
 
             // when
             (unitUnderTest as any).requestHandler(mockRequest, mockResponse);
 
             // then
-            expect(MixedEndpoint.allAsArray)
+            expect(Util.allAsArray)
                 .toHaveBeenCalledWith(expectedArgument);
         });
         it('calls allAsArray on the req.query["david-dm"] value', () => {
             const expectedArgument = 'expected argument';
             mockRequest.query['david-dm'] = expectedArgument;
 
-            spyOn(MixedEndpoint, 'allAsArray')
+            spyOn(Util, 'allAsArray')
                 .and.returnValue([]);
 
             // when
             (unitUnderTest as any).requestHandler(mockRequest, mockResponse);
 
             // then
-            expect(MixedEndpoint.allAsArray)
+            expect(Util.allAsArray)
                 .toHaveBeenCalledWith(expectedArgument);
         });
         it('calls allAsArray on the req.query["coveralls"] value', () => {
             const expectedArgument = 'expected argument';
             mockRequest.query['coveralls'] = expectedArgument;
 
-            spyOn(MixedEndpoint, 'allAsArray')
+            spyOn(Util, 'allAsArray')
                 .and.returnValue([]);
 
             // when
             (unitUnderTest as any).requestHandler(mockRequest, mockResponse);
 
             // then
-            expect(MixedEndpoint.allAsArray)
+            expect(Util.allAsArray)
                 .toHaveBeenCalledWith(expectedArgument);
         });
         it('calls load on a ConcourseTransformer instance for each concourse URL', async() => {
@@ -132,9 +133,9 @@ describe('MixedEndpoint', () => {
             await requestCallback(mockRequest, mockResponse);
 
             // then
-            expect(MixedEndpoint.getConcourseTransformerFor).toHaveBeenCalledTimes(2);
-            expect(MixedEndpoint.getConcourseTransformerFor).toHaveBeenCalledWith(givenUrl1);
-            expect(MixedEndpoint.getConcourseTransformerFor).toHaveBeenCalledWith(givenUrl2);
+            expect(Util.getConcourseTransformerFor).toHaveBeenCalledTimes(2);
+            expect(Util.getConcourseTransformerFor).toHaveBeenCalledWith(givenUrl1);
+            expect(Util.getConcourseTransformerFor).toHaveBeenCalledWith(givenUrl2);
 
             expect(mockConcourseTransformer.load).toHaveBeenCalledTimes(2);
         });
@@ -148,9 +149,9 @@ describe('MixedEndpoint', () => {
             await requestCallback(mockRequest, mockResponse);
 
             // then
-            expect(MixedEndpoint.getDavidDmTransformerFor).toHaveBeenCalledTimes(2);
-            expect(MixedEndpoint.getDavidDmTransformerFor).toHaveBeenCalledWith(givenUrl1);
-            expect(MixedEndpoint.getDavidDmTransformerFor).toHaveBeenCalledWith(givenUrl2);
+            expect(Util.getDavidDmTransformerFor).toHaveBeenCalledTimes(2);
+            expect(Util.getDavidDmTransformerFor).toHaveBeenCalledWith(givenUrl1);
+            expect(Util.getDavidDmTransformerFor).toHaveBeenCalledWith(givenUrl2);
 
             expect(mockDavidDmTransformer.load).toHaveBeenCalledTimes(2);
         });
@@ -164,9 +165,9 @@ describe('MixedEndpoint', () => {
             await requestCallback(mockRequest, mockResponse);
 
             // then
-            expect(MixedEndpoint.getCoverallsTransformerFor).toHaveBeenCalledTimes(2);
-            expect(MixedEndpoint.getCoverallsTransformerFor).toHaveBeenCalledWith(givenUrl1);
-            expect(MixedEndpoint.getCoverallsTransformerFor).toHaveBeenCalledWith(givenUrl2);
+            expect(Util.getCoverallsTransformerFor).toHaveBeenCalledTimes(2);
+            expect(Util.getCoverallsTransformerFor).toHaveBeenCalledWith(givenUrl1);
+            expect(Util.getCoverallsTransformerFor).toHaveBeenCalledWith(givenUrl2);
 
             expect(mockCoverallsTransformer.load).toHaveBeenCalledTimes(2);
         });
@@ -237,63 +238,6 @@ describe('MixedEndpoint', () => {
             // then
             expect(mockResponse.status).toHaveBeenCalledWith(500);
             expect(mockResponse.send).toHaveBeenCalledWith(expectedReason);
-        });
-    });
-});
-
-describe('MixedEndpoint util functions', () => {
-    describe('Static Function: allAsArray', () => {
-        it('returns an empty array for undefined', () =>
-            expect(MixedEndpoint.allAsArray(undefined)).toEqual([]));
-        it('returns a single item array for a string', () => {
-            const singleItem = 'single item';
-            const actualResult = MixedEndpoint.allAsArray(singleItem);
-            expect(actualResult).toContain(singleItem);
-            expect(actualResult.length).toEqual(1);
-        });
-        it('returns the array for an array', () => {
-            const arrayItem = ['one','two','three'];
-            const actualResult = MixedEndpoint.allAsArray(arrayItem);
-            expect(actualResult).toEqual(arrayItem);
-        });
-    });
-    describe('Static Function: getConcourseTransformerFor', () => {
-        it('returns a new ConcourseTransformer instance for the given url', () => {
-            // given
-            const givenUrl = 'http://example.com';
-
-            // when
-            const actualResult = MixedEndpoint.getConcourseTransformerFor(givenUrl);
-
-            // then
-            expect(actualResult.constructor.name).toEqual('ConcourseTransformer');
-            expect((actualResult as any).concourseUrl).toEqual(givenUrl);
-        });
-    });
-    describe('Static Function: getDavidDmTransformerFor', () => {
-        it('returns a new DavidDmTransformer instance for the given path', () => {
-            // given
-            const givenPath = 'some/repo';
-
-            // when
-            const actualResult = MixedEndpoint.getDavidDmTransformerFor(givenPath);
-
-            // then
-            expect(actualResult.constructor.name).toEqual('DavidDmTransformer');
-            expect((actualResult as any).githubRepoPath).toEqual(givenPath);
-        });
-    });
-    describe('Static Function: getCoverallsTransformerFor', () => {
-        it('returns a new DavidDmTransformer instance for the given path', () => {
-            // given
-            const givenPath = 'some/repo';
-
-            // when
-            const actualResult = MixedEndpoint.getCoverallsTransformerFor(givenPath);
-
-            // then
-            expect(actualResult.constructor.name).toEqual('CoverallsTransformer');
-            expect((actualResult as any).githubRepoPath).toEqual(givenPath);
         });
     });
 });
