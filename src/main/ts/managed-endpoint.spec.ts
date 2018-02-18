@@ -128,38 +128,17 @@ describe('Class: ManagedEndpoint', () => {
             expect(nockScope.isDone()).toBeTruthy();
         });
 
-        it('calls JSON.parse on the database response', async () => {
-            nock.cleanAll();
-
-            const expectedValue = '{"concourse": "someValue"}';
-            nockScope = createDatabaseNock(200, expectedValue);
-
-            spyOn(JSON, 'parse')
-                .and.callThrough();
-
-            // when
-            await request(mockApp)
-                .get('/')
-                .set('X-Chip-Id', mockChipId)
-                .expect(200);
-
-            // then
-            expect(JSON.parse)
-                .toHaveBeenCalledWith(expectedValue);
-        });
-
-        it('sends a 500 error if the JSON.parse call throws', async () => {
-            nock.cleanAll();
-
-            const expectedValue = 'not a parsable JSON string';
-            nockScope = createDatabaseNock(200, expectedValue);
-
+        it('returns a 500 error if the database lookup failed', async () => {
+            nockScope = createDatabaseNock(500, {});
             // when
             await request(mockApp)
                 .get('/')
                 .set('X-Chip-Id', mockChipId)
                 // then
                 .expect(500);
+
+            // then
+            expect(nockScope.isDone()).toBeTruthy();
         });
 
         it('calls allAsArray on the "concourse" value of the parsed database response', async () => {

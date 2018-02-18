@@ -1,12 +1,14 @@
 import {Router, Request, Response} from 'express';
-import * as rp from 'request-promise-native';
 import {Util} from "./util";
+import {CheapCouch} from "./cheap-couch";
 
 export class ManagedEndpoint {
+    private cheapCouch: CheapCouch;
     private documentBaseUrl: string;
     constructor(readonly router: Router) {
         this.router.get('/', (req: Request, res: Response) => this.requestHandler(req, res));
         this.documentBaseUrl = Util.envOrDefault('DOCUMENT_BASE_URL', 'http://localhost:5984/hard-status-clients/');
+        this.cheapCouch = new CheapCouch(this.documentBaseUrl);
     }
 
     private requestHandler(req: Request, res: Response): Promise<void> {
@@ -17,22 +19,16 @@ export class ManagedEndpoint {
             return;
         }
 
-        const documentUrl = `${this.documentBaseUrl}${chipId}`;
-        return rp.get(documentUrl)
-            .then(resultString => {
-                try {
-                    return Promise.all(this.makePromises(JSON.parse(resultString)))
-                        .then(responses => responses
-                            .sort((a,b) => a.url.localeCompare(b.url))
-                            .map(response => response.dots)
-                            .reduce((a,b) => a.concat(...b), []))
-                        .then(dots => res.send(dots.join('')))
-                        .then(() => undefined)
-                        .catch(e => res.status(500).send(e));
-                } catch (e) {
-                    res.sendStatus(500).send(e);
-                }
-            });
+        return this.cheapCouch.loadOrCreate(chipId)
+            .then(result => this.makePromises(result))
+            .then(promises => Promise.all(promises))
+            .then(responses => responses
+                .sort((a,b) => a.url.localeCompare(b.url))
+                .map(response => response.dots)
+                .reduce((a,b) => a.concat(...b), []))
+            .then(dots => res.send(dots.join('')))
+            .then(() => undefined)
+            .catch(e => res.status(500).send(e));
     }
 
     private makePromises(result: any) {
