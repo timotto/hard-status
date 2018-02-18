@@ -1,6 +1,6 @@
 import * as rp from 'request-promise-native';
 import * as URL from 'url';
-import {HardStatusResponse} from "./hard-status-response";
+import {HardStatusResponse} from "../hard-status-response";
 
 export class ConcourseTransformer {
 

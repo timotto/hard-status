@@ -1,4 +1,4 @@
-import {HardStatusResponse} from "./hard-status-response";
+import {HardStatusResponse} from "../hard-status-response";
 import * as request from 'request';
 
 export class CoverallsTransformer {

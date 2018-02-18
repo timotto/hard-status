@@ -1,6 +1,6 @@
 import {Router, Request, Response} from 'express';
-import {HardStatusResponse} from "./hard-status-response";
-import {Util} from "./util";
+import {HardStatusResponse} from "../hard-status-response";
+import {Util} from "../util/util";
 
 export class MixedEndpoint {
     constructor(readonly router: Router) {

@@ -1,6 +1,6 @@
 import {Router, Request, Response} from 'express';
-import {Util} from "./util";
-import {CheapCouch} from "./cheap-couch";
+import {Util} from "../util/util";
+import {CheapCouch} from "../util/cheap-couch";
 
 export class ManagedEndpoint {
     private cheapCouch: CheapCouch;

@@ -1,6 +1,6 @@
-import {CoverallsTransformer} from "./coveralls-transformer";
-import {DavidDmTransformer} from "./david-dm-transformer";
-import {ConcourseTransformer} from "./concourse-transformer";
+import {CoverallsTransformer} from "../transformer/coveralls-transformer";
+import {DavidDmTransformer} from "../transformer/david-dm-transformer";
+import {ConcourseTransformer} from "../transformer/concourse-transformer";
 
 export class Util {
     static allAsArray(x: string | string[] | undefined): string[] {

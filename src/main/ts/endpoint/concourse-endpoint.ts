@@ -1,7 +1,7 @@
 import {Router, Request, Response} from 'express';
-import {ConcourseTransformer} from "./concourse-transformer";
+import {ConcourseTransformer} from "../transformer/concourse-transformer";
 import * as accepts from 'accepts';
-import {HardStatusResponse} from "./hard-status-response";
+import {HardStatusResponse} from "../hard-status-response";
 
 export class ConcourseEndpoint {
 

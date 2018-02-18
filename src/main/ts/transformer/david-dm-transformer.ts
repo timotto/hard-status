@@ -1,4 +1,4 @@
-import {HardStatusResponse} from "./hard-status-response";
+import {HardStatusResponse} from "../hard-status-response";
 import * as rp from 'request-promise-native';
 
 const DOTVALUE_UNDEFINED = 'u ';

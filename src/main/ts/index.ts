@@ -1,6 +1,6 @@
 import * as express from "express";
 import {Router} from 'express';
-import {JsonLogger} from "./json-logger";
+import {JsonLogger} from "./util/json-logger";
 import {ExpressApp} from "./express-app";
 
 const app = express();

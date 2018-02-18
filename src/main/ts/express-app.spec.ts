@@ -1,10 +1,10 @@
 import * as express from 'express';
 import {Router} from 'express';
 import {ExpressApp} from "./express-app";
-import {HealthEndpoint} from "./health-endpoint";
-import {ConcourseEndpoint} from "./concourse-endpoint";
-import {MixedEndpoint} from "./mixed-endpoint";
-import {ManagedEndpoint} from "./managed-endpoint";
+import {HealthEndpoint} from "./endpoint/health-endpoint";
+import {ConcourseEndpoint} from "./endpoint/concourse-endpoint";
+import {MixedEndpoint} from "./endpoint/mixed-endpoint";
+import {ManagedEndpoint} from "./endpoint/managed-endpoint";
 
 describe('Class: ExpressApp', () => {
 

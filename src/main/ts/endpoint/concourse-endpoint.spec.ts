@@ -2,7 +2,7 @@ import {ConcourseEndpoint} from "./concourse-endpoint";
 import * as express from 'express';
 import {Router} from 'express';
 import * as request from 'supertest';
-import {ConcourseTransformer} from "./concourse-transformer";
+import {ConcourseTransformer} from "../transformer/concourse-transformer";
 
 describe('Class: ConcourseEndpoint', () => {
     let unitUnderTest: ConcourseEndpoint;

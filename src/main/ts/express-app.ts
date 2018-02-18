@@ -1,8 +1,8 @@
 import {Router} from "express";
-import {ConcourseEndpoint} from "./concourse-endpoint";
-import {HealthEndpoint} from "./health-endpoint";
-import {MixedEndpoint} from "./mixed-endpoint";
-import {ManagedEndpoint} from "./managed-endpoint";
+import {ConcourseEndpoint} from "./endpoint/concourse-endpoint";
+import {HealthEndpoint} from "./endpoint/health-endpoint";
+import {MixedEndpoint} from "./endpoint/mixed-endpoint";
+import {ManagedEndpoint} from "./endpoint/managed-endpoint";
 
 export class ExpressApp {
     constructor(readonly app, private router: () => Router) {

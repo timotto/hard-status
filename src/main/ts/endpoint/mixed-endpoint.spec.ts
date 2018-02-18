@@ -1,9 +1,9 @@
 import {Router, Request, Response} from 'express';
 import {MixedEndpoint} from "./mixed-endpoint";
-import {ConcourseTransformer} from "./concourse-transformer";
-import {DavidDmTransformer} from "./david-dm-transformer";
-import {CoverallsTransformer} from "./coveralls-transformer";
-import {Util} from "./util";
+import {ConcourseTransformer} from "../transformer/concourse-transformer";
+import {DavidDmTransformer} from "../transformer/david-dm-transformer";
+import {CoverallsTransformer} from "../transformer/coveralls-transformer";
+import {Util} from "../util/util";
 
 describe('MixedEndpoint', () => {
     let unitUnderTest: MixedEndpoint;

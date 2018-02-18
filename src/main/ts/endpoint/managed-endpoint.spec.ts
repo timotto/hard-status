@@ -2,10 +2,10 @@ import {Router, Request, Response} from 'express';
 import * as request from 'supertest';
 import * as express from 'express';
 import {ManagedEndpoint} from "./managed-endpoint";
-import {CoverallsTransformer} from "./coveralls-transformer";
-import {DavidDmTransformer} from "./david-dm-transformer";
-import {ConcourseTransformer} from "./concourse-transformer";
-import {Util} from "./util";
+import {CoverallsTransformer} from "../transformer/coveralls-transformer";
+import {DavidDmTransformer} from "../transformer/david-dm-transformer";
+import {ConcourseTransformer} from "../transformer/concourse-transformer";
+import {Util} from "../util/util";
 import any = jasmine.any;
 import * as nock from 'nock';
 
