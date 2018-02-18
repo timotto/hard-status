@@ -279,6 +279,8 @@ jobs:
         value: ((ingressHostname))
       - key: serviceType
         value: ClusterIP
+      - key: documentBaseUrl
+        value: http://10.42.159.60:32033/hard-status-clients/
 
 - name: deploy-rpi
   serial_groups: [helm-rpi]
@@ -314,6 +316,8 @@ jobs:
         value: ((arm-backend-image-name))
       - key: redisDockerImage
         value: knjcode/rpi-redis
+      - key: documentBaseUrl
+        value: http://couchdb-test-couchdb.default.svc.cluster.local:5984/hard-status-clients/
 
 
 - name: arduino-docker-build
