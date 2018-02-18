@@ -18,7 +18,7 @@ export class CoverallsTransformer {
                     CoverallsTransformer.coverageFromHeaders(
                         response.headers));
                 const result = {
-                    url: undefined,
+                    url: uri,
                     dots: [dot],
                 };
                 resolve(result);
