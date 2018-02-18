@@ -1,15 +1,24 @@
 $fn = 100;
 
+type = "diffusor";
+//type = "wallpanel";
+
 // printed part
 // diffusor / mounted on led panel
 $height_mm = 5;
 $outer_wall_space_mm = 1;
 $diffusor_width_mm = 0.8;
 $wall_width_mm = 2;
+// type == "diffusor"
 $nudge_center_from_outside_mm = 4;
 $nudge_depth_mm = 3.5;
 $nudge_width_mm = 6;
 $nudge_height_mm = 3;
+// type == "wallpanel"
+$nail_hole_diameter_mm = 5;
+$nail_hole_strength_mm = 3;
+$nail_hole_height_mm = 2;
+
 // cube / frame / diffusor mount
 $mount_surface_mm = 3;
 $mount_offset_mm = 2;
@@ -41,7 +50,34 @@ $small= $outer_x + ($tolerance_mm) * 2;
 $big = $small + ($height_mm + $panel_space_mm) * 2;
 
 cap();
-nudges();
+if (type == "diffusor") {
+    // add nudges so it snaps in to the cube
+    nudges();
+} else if (type == "wallpanel") {
+    // add ring to hand it on a nail in the wall
+    nailrings();
+}
+
+module nailrings() {
+    nailring();
+    rotate([0,0,180]) translate([-$outer_x,-$outer_y,0]) nailring();
+}
+
+module nailring() {
+    outer_size = $nail_hole_diameter_mm + $nail_hole_strength_mm;
+    
+    translate([$outer_x/2, 0, $height_mm - $nail_hole_height_mm]) {
+        difference() {
+            difference() {
+                cylinder(d=outer_size, h=$nail_hole_height_mm);
+                translate([0,0,-1])
+                cylinder(d=($nail_hole_diameter_mm), h=$nail_hole_height_mm + 2);
+            }
+            translate([-outer_size/2,0.001,-1])
+            cube([outer_size,outer_size/2,$nail_hole_height_mm+2]);
+        }
+    }
+}
 
 module prism(l, w, h){
     translate([-l/2,-w/2,-h/2])
