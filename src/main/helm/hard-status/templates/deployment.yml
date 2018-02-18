@@ -19,8 +19,8 @@ spec:
           image: {{.Values.imageRegistry}}/{{.Values.imageName}}:v{{.Values.version}}
           imagePullPolicy: Always
           env:
-          - name: REDIS_URL
-            value: tcp://redis-service:6379
+          - name: DOCUMENT_BASE_URL
+            value: {{.Values.documentBaseUrl}}
           resources:
             limits:
               cpu: "0.5"
