@@ -4,6 +4,7 @@ image_resource:
   source:
     repository: keyglitch/docker-slic3r-prusa3d
 inputs:
+- name: 3d-source
 - name: stl-output
 outputs:
 - name: gcode-output
