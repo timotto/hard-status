@@ -1,0 +1,11 @@
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: keyglitch/docker-slic3r-prusa3d
+inputs:
+- name: stl-output
+outputs:
+- name: gcode-output
+run:
+  path: 3d-source/src/3d/ci/build-gcode.sh

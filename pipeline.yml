@@ -19,7 +19,8 @@ groups:
   - arduinojson-test
   - libyuarel-test
   - hard-status-esp32
-  - 3d
+  - cube
+  - diffusor
 - name: backend
   jobs:
   - unit
@@ -44,7 +45,8 @@ groups:
   - hard-status-esp32
 - name: physibles
   jobs:
-  - 3d
+  - cube
+  - diffusor
 
 jobs:
 - name: unit
@@ -530,19 +532,33 @@ jobs:
         params:
           path: lolin32-firmware-build-384/hard-status-esp32-lolin32.bin
 
-- name: 3d
+- name: diffusor
   plan:
   - get: 3d-source
     trigger: true
-  - aggregate:
-    - task: build-diffusor-stl
-      file: 3d-source/src/3d/ci/build-stl.yml
-      params:
-        NAME: diffusor
-    - task: build-cube-stl
-      file: 3d-source/src/3d/ci/build-stl.yml
-      params:
-        NAME: cube
+  - task: build-stl
+    file: 3d-source/src/3d/ci/build-stl.yml
+    params:
+      NAME: diffusor
+  - task: build-gcode
+    file: 3d-source/src/3d/ci/build-gcode.yml
+    params:
+      NAME: diffusor
+      LAYER_HEIGHT: 0.35
+
+- name: cube
+  plan:
+  - get: 3d-source
+    trigger: true
+  - task: build-stl
+    file: 3d-source/src/3d/ci/build-stl.yml
+    params:
+      NAME: cube
+  - task: build-gcode
+    file: 3d-source/src/3d/ci/build-gcode.yml
+    params:
+      NAME: cube
+      LAYER_HEIGHT: 0.35
 
 resources:
 - name: source-code
