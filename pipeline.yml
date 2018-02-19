@@ -542,6 +542,8 @@ jobs:
       NAME: diffusor
   - task: build-gcode
     file: 3d-source/src/3d/ci/build-gcode.yml
+    output_mapping:
+      gcode-output: diffusor-gcode
     params:
       NAME: diffusor
       LAYER_HEIGHT: 0.35
@@ -556,6 +558,8 @@ jobs:
       NAME: cube
   - task: build-gcode
     file: 3d-source/src/3d/ci/build-gcode.yml
+    output_mapping:
+      gcode-output: cube-gcode
     params:
       NAME: cube
       LAYER_HEIGHT: 0.35
