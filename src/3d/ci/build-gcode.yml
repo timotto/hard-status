@@ -10,3 +10,4 @@ outputs:
 - name: gcode-output
 run:
   path: 3d-source/src/3d/ci/build-gcode.sh
+  user: root

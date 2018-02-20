@@ -6,4 +6,4 @@ set -e -x
     --layer-height $LAYER_HEIGHT \
     stl-output/${NAME}.stl \
     --output \
-    $PWD/gcode-output/${NAME}.gcode
+    gcode-output/${NAME}.gcode
