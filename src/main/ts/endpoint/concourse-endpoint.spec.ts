@@ -83,5 +83,21 @@ describe('Class: ConcourseEndpoint', () => {
                     .catch(error => expect(error).toEqual(expectedResponse))
             });
         });
+
+        describe('request with any other Accept HTTP header value', () => {
+            it('returns the .dots array of the ConcourseTransformer response as a joined string', async () => {
+                const expectedArray = ['a','b','c'];
+                spyOn(ConcourseTransformer.prototype, 'load')
+                    .and
+                    .returnValue(Promise.resolve({dots:expectedArray}));
+
+                await request(mockApp)
+                    .get('/?url=url')
+                    .accept('text/ebcdic')
+                    .expect(200)
+                    .then(response =>
+                        expect(response.text).toBe(expectedArray.join('')))
+            });
+        });
     });
 });
