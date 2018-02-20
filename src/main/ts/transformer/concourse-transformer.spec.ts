@@ -72,6 +72,29 @@ describe('Class: ConcourseTransformer', () => {
                     expect(actualResult).toEqual(expectedResult);
                 });
             });
+            describe('response with 2 pipeline with 3 successful jobs', () => {
+                it('returns an object with 3 items in the dots property, all are "+ "', async () => {
+                    const givenConcourseUrl = 'http://test-concourse.example.com';
+                    const mockPipelineResponse = [{name:"1", team_name: "t1"},{name:"3", team_name: "t2"}];
+                    const mockJobResponse = [{finished_build:{status:"succeeded"}},{finished_build:{status:"succeeded"}},{finished_build:{status:"succeeded"}}];
+
+                    // given
+                    unitUnderTest = new ConcourseTransformer(givenConcourseUrl);
+                    spyOn((unitUnderTest as any), 'apiGet')
+                        .and.callFake(path =>
+                        Promise.resolve(path === '/pipelines'
+                            ? mockPipelineResponse
+                            : mockJobResponse));
+
+                    // when
+                    const actualResult = await unitUnderTest.load();
+
+                    // then
+                    expect(actualResult.dots.length)
+                        .toEqual(mockPipelineResponse.length * mockJobResponse.length);
+                });
+            });
+
         });
         describe('Concourse 3.9.0 API changes', () => {
             it('builds the now gone "url" property from "team_name" and "pipeline"', async () => {
@@ -98,25 +121,49 @@ describe('Class: ConcourseTransformer', () => {
                 expect(scope.isDone()).toBeTruthy();
             });
         });
-        it('loads only one team if the concourseUrl ends in /teams/${teamName}', async () => {
-            const givenTeamName = 'team-name';
-            const expectedConcourseUrl = 'http://concourse.example.com';
-            const givenConcourseUrl = `${expectedConcourseUrl}/teams/${givenTeamName}`;
+        describe('concourseUrl ends in /teams/someTeamName', () => {
+            it('only loads jobs of team someTeamName', async () => {
+                const givenTeamName = 'team-name';
+                const expectedConcourseUrl = 'http://concourse.example.com';
+                const givenConcourseUrl = `${expectedConcourseUrl}/teams/${givenTeamName}`;
 
-            // given
-            unitUnderTest = new ConcourseTransformer(givenConcourseUrl);
-            spyOn((unitUnderTest as any), 'apiGet')
-                .and.returnValue(Promise.resolve());
+                // given
+                unitUnderTest = new ConcourseTransformer(givenConcourseUrl);
+                spyOn((unitUnderTest as any), 'apiGet')
+                    .and.returnValue(Promise.resolve());
 
-            // when
-            await unitUnderTest.load()
-                .catch(() => undefined);
+                // when
+                await unitUnderTest.load()
+                    .catch(() => undefined);
 
-            // then
-            expect((unitUnderTest as any).apiGet)
-                .toHaveBeenCalledWith(`/teams/${givenTeamName}/pipelines`);
-            expect((unitUnderTest as any).concourseUrl)
-                .toEqual(expectedConcourseUrl);
+                // then
+                expect((unitUnderTest as any).apiGet)
+                    .toHaveBeenCalledWith(`/teams/${givenTeamName}/pipelines`);
+                expect((unitUnderTest as any).concourseUrl)
+                    .toEqual(expectedConcourseUrl);
+            });
+        });
+        describe('concourseUrl ends in /pipelines', () => {
+            it('returns only one dot per pipeline instead of one per job', async () => {
+                const expectedConcourseUrl = 'http://test-concourse.example.com';
+                const givenConcourseUrl = `${expectedConcourseUrl}/pipelines`;
+                const mockPipelineResponse = [{name:"1", team_name: "t1"},{name:"3", team_name: "t2"}];
+                const mockJobResponse = [{finished_build:{status:"succeeded"}},{finished_build:{status:"succeeded"}},{finished_build:{status:"succeeded"}}];
+
+                // given
+                unitUnderTest = new ConcourseTransformer(givenConcourseUrl);
+                spyOn((unitUnderTest as any), 'apiGet')
+                    .and.callFake(path =>
+                    Promise.resolve(path === '/pipelines'
+                        ? mockPipelineResponse
+                        : mockJobResponse));
+
+                // when
+                const actualResult = await unitUnderTest.load();
+
+                // then
+                expect(actualResult.dots.length).toEqual(mockPipelineResponse.length);
+            })
         });
     });
 
@@ -217,6 +264,43 @@ describe('Class: ConcourseTransformer', () => {
 
             // then
             expect(actualResultForNull).toEqual(expectedResult);
+        });
+    });
+
+    describe('Static Function: findWorstDot', () => {
+        it('returns an empty string if the dots array is empty', () => {
+            expect(ConcourseTransformer.findWorstDot([])).toEqual('');
+        });
+        it('returns the first item ordered by static function sortDots', () => {
+            // given
+            const givenDots = ['- ', '+s', 'ap', 'uu'];
+
+            // when
+            const actualResult = ConcourseTransformer.findWorstDot(givenDots);
+
+            // then
+            expect(actualResult).toEqual('+s');
+        });
+    });
+
+    describe('Static Function: sortDots', () => {
+        it('sorts dot strings in the order -easp+u?, first by second character than by the first one', () => {
+            expect(ConcourseTransformer.sortDots('- ', '+s')).toEqual(1);
+            expect(ConcourseTransformer.sortDots('ep', 'as')).toEqual(1);
+            expect(ConcourseTransformer.sortDots('+p', '- ')).toEqual(-1);
+            expect(ConcourseTransformer.sortDots('+s', '-p')).toEqual(-1);
+            expect(ConcourseTransformer.sortDots('ap', 'ap')).toEqual(0);
+            expect(ConcourseTransformer.sortDots('+ ', 'a ')).toEqual(1);
+            expect(ConcourseTransformer.sortDots('a ', 'u ')).toEqual(-1);
+        });
+    });
+    describe('Static Function: rateDotValue', () => {
+        it('rates a dot string character in the order -easp+u', () => {
+            const expectedOrder = '-easp+u'.split('');
+
+            expectedOrder.forEach((item,index) => {
+                expect(ConcourseTransformer.rateDotValue(item)).toEqual(index);
+            });
         });
     });
 });

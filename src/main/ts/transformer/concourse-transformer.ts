@@ -1,28 +1,28 @@
 import * as rp from 'request-promise-native';
-import * as URL from 'url';
 import {HardStatusResponse} from "../hard-status-response";
 
 export class ConcourseTransformer {
 
     private team: string = undefined;
+    private pipelinesOnly: boolean = false;
 
     constructor(private concourseUrl: string) {
         this.processConcourseUrl(concourseUrl);
     }
 
     private processConcourseUrl(concourseUrl: string) {
-        const parsedUrl = URL.parse(concourseUrl);
-        if ((parsedUrl.path === '' || parsedUrl.path === '/')) {
-            return;
+        if (concourseUrl.endsWith('/pipelines')) {
+            this.pipelinesOnly = true;
+            concourseUrl = concourseUrl.substr(0,
+                concourseUrl.length - '/pipelines'.length);
         }
-
-        const m = parsedUrl.path.match("/teams/([^/]+)$");
-        if (!m) {
-            return;
+        const teamMatcher = concourseUrl.match("/teams/([^/]+)$");
+        if (teamMatcher) {
+            this.team = teamMatcher[1];
+            concourseUrl = concourseUrl.substr(0,
+                concourseUrl.length - teamMatcher[0].length);
         }
-
-        this.concourseUrl = concourseUrl.substr(0, concourseUrl.length - m[0].length);
-        this.team = m[1];
+        this.concourseUrl = concourseUrl;
     }
 
     load(): Promise<HardStatusResponse> {
@@ -35,7 +35,23 @@ export class ConcourseTransformer {
     }
 
     private transformResults(results: any[]): HardStatusResponse {
-        return results
+        return this.pipelinesOnly
+            ? results
+            // calculate dot array first so length can be used in reduced step
+                .map(pipeline => ({...pipeline, dots: pipeline.jobs.map(job => ConcourseTransformer.jobToDot(job))}))
+                .reduce((result, pipeline) => ({
+                        url: this.concourseUrl,
+                        dots: result.dots.concat(
+                            ConcourseTransformer.findWorstDot(pipeline.dots)),
+                        ranges: result.ranges.concat({
+                            team_name: pipeline.team_name,
+                            pipeline: pipeline.name,
+                            offset: result.dots.length,
+                            length: pipeline.dots.length
+                        })}),
+                    {url: this.concourseUrl, dots:[], ranges:[]})
+
+            : results
             // calculate dot array first so length can be used in reduced step
             .map(pipeline => ({...pipeline, dots: pipeline.jobs.map(job => ConcourseTransformer.jobToDot(job))}))
             .reduce((result, pipeline) => ({
@@ -59,6 +75,44 @@ export class ConcourseTransformer {
             : ConcourseTransformer.parseJobStatus(job.finished_build);
 
         return [finished,next].join('');
+    }
+
+    public static findWorstDot(dots: string[]): string {
+        return dots.length>0?dots.sort(ConcourseTransformer.sortDots)[0]:'';
+    }
+
+    public static sortDots(aString: string, bString: string): number {
+        const aArray = aString.split('');
+        const bArray = bString.split('');
+
+        const a1 = ConcourseTransformer.rateDotValue(aArray[1]);
+        const b1 = ConcourseTransformer.rateDotValue(bArray[1]);
+
+        if (a1 < b1) return -1;
+        if (a1 > b1) return 1;
+        // last position is the same
+
+        const a0 = ConcourseTransformer.rateDotValue(aArray[0]);
+        const b0 = ConcourseTransformer.rateDotValue(bArray[0]);
+
+        if (a0 < b0) return -1;
+        if (a0 > b0) return 1;
+        // first position is the same
+
+        return 0;
+    }
+
+    public static rateDotValue(char: string): number {
+        switch(char) {
+            case '-': return 0;
+            case 'e': return 1;
+            case 'a': return 2;
+            case 's': return 3;
+            case 'p': return 4;
+            case '+': return 5;
+            case 'u': return 6;
+            default: return 10;
+        }
     }
 
     public static parseJobStatus(status: any): any {
