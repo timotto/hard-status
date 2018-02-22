@@ -8,6 +8,7 @@ import {ConcourseTransformer} from "../transformer/concourse-transformer";
 import {Util} from "../util/util";
 import any = jasmine.any;
 import * as nock from 'nock';
+import {HttpClient} from "../util/http-client";
 
 const defaultDocumentBaseUrl = "http://localhost:5984/hard-status-clients/";
 
@@ -213,8 +214,8 @@ describe('Class: ManagedEndpoint', () => {
 
             // then
             expect(Util.getConcourseTransformerFor).toHaveBeenCalledTimes(2);
-            expect(Util.getConcourseTransformerFor).toHaveBeenCalledWith(givenUrl1);
-            expect(Util.getConcourseTransformerFor).toHaveBeenCalledWith(givenUrl2);
+            expect(Util.getConcourseTransformerFor).toHaveBeenCalledWith(any(HttpClient), givenUrl1);
+            expect(Util.getConcourseTransformerFor).toHaveBeenCalledWith(any(HttpClient), givenUrl2);
 
             expect(mockConcourseTransformer.load).toHaveBeenCalledTimes(2);
         });
@@ -235,8 +236,8 @@ describe('Class: ManagedEndpoint', () => {
 
             // then
             expect(Util.getDavidDmTransformerFor).toHaveBeenCalledTimes(2);
-            expect(Util.getDavidDmTransformerFor).toHaveBeenCalledWith(givenUrl1);
-            expect(Util.getDavidDmTransformerFor).toHaveBeenCalledWith(givenUrl2);
+            expect(Util.getDavidDmTransformerFor).toHaveBeenCalledWith(any(HttpClient), givenUrl1);
+            expect(Util.getDavidDmTransformerFor).toHaveBeenCalledWith(any(HttpClient), givenUrl2);
 
             expect(mockDavidDmTransformer.load).toHaveBeenCalledTimes(2);
         });
@@ -257,8 +258,8 @@ describe('Class: ManagedEndpoint', () => {
 
             // then
             expect(Util.getCoverallsTransformerFor).toHaveBeenCalledTimes(2);
-            expect(Util.getCoverallsTransformerFor).toHaveBeenCalledWith(givenUrl1);
-            expect(Util.getCoverallsTransformerFor).toHaveBeenCalledWith(givenUrl2);
+            expect(Util.getCoverallsTransformerFor).toHaveBeenCalledWith(any(HttpClient), givenUrl1);
+            expect(Util.getCoverallsTransformerFor).toHaveBeenCalledWith(any(HttpClient), givenUrl2);
 
             expect(mockCoverallsTransformer.load).toHaveBeenCalledTimes(2);
         });

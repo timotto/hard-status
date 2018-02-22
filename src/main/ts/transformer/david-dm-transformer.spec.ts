@@ -1,5 +1,6 @@
 import {DavidDmTransformer} from "./david-dm-transformer";
 import * as nock from 'nock';
+import {HttpClient} from "../util/http-client";
 
 describe('Class: DavidDmTransformer', () => {
     const expectedBasePath = 'https://david-dm.org';
@@ -7,7 +8,7 @@ describe('Class: DavidDmTransformer', () => {
     let unitUnderTest: DavidDmTransformer;
     let nockScope: nock.Scope;
     beforeEach(() => {
-        unitUnderTest = new DavidDmTransformer(testPath);
+        unitUnderTest = new DavidDmTransformer(new HttpClient(), testPath);
         nockScope = nock(expectedBasePath)
             .get(`/${testPath}/info.json`)
             .reply(200, {status: 'notsouptodate'});

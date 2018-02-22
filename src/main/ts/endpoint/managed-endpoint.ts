@@ -1,8 +1,10 @@
 import {Router, Request, Response} from 'express';
 import {Util} from "../util/util";
 import {CheapCouch} from "../util/cheap-couch";
+import {HttpClient} from "../util/http-client";
 
 export class ManagedEndpoint {
+    private httpClient: HttpClient = new HttpClient();
     private cheapCouch: CheapCouch;
     private documentBaseUrl: string;
     constructor(readonly router: Router) {
@@ -33,11 +35,11 @@ export class ManagedEndpoint {
 
     private makePromises(result: any) {
         const concoursePromises = Util.allAsArray(result['concourse'])
-            .map(url => Util.getConcourseTransformerFor(url).load());
+            .map(url => Util.getConcourseTransformerFor(this.httpClient, url).load());
         const davidDmPromises = Util.allAsArray(result['david-dm'])
-            .map(url => Util.getDavidDmTransformerFor(url).load());
+            .map(url => Util.getDavidDmTransformerFor(this.httpClient, url).load());
         const coverallsPromises = Util.allAsArray(result['coveralls'])
-            .map(url => Util.getCoverallsTransformerFor(url).load());
+            .map(url => Util.getCoverallsTransformerFor(this.httpClient, url).load());
 
         return concoursePromises
             .concat(...davidDmPromises)

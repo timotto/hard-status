@@ -1,6 +1,7 @@
 import {CoverallsTransformer} from "../transformer/coveralls-transformer";
 import {DavidDmTransformer} from "../transformer/david-dm-transformer";
 import {ConcourseTransformer} from "../transformer/concourse-transformer";
+import {HttpClient} from "./http-client";
 
 export class Util {
     static allAsArray(x: string | string[] | undefined): string[] {
@@ -11,16 +12,16 @@ export class Util {
                 : x;
     }
 
-    static getConcourseTransformerFor(url: string): ConcourseTransformer {
-        return new ConcourseTransformer(url);
+    static getConcourseTransformerFor(httpClient: HttpClient, url: string): ConcourseTransformer {
+        return new ConcourseTransformer(httpClient, url);
     }
 
-    static getDavidDmTransformerFor(path: string): DavidDmTransformer {
-        return new DavidDmTransformer(path);
+    static getDavidDmTransformerFor(httpClient: HttpClient, path: string): DavidDmTransformer {
+        return new DavidDmTransformer(httpClient, path);
     }
 
-    static getCoverallsTransformerFor(path: string): CoverallsTransformer {
-        return new CoverallsTransformer(path);
+    static getCoverallsTransformerFor(httpClient: HttpClient, path: string): CoverallsTransformer {
+        return new CoverallsTransformer(httpClient, path);
     }
 
     public static envOrDefault(envKey: string, defaultValue: string): string {

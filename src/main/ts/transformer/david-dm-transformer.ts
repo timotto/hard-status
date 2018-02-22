@@ -1,5 +1,5 @@
 import {HardStatusResponse} from "../hard-status-response";
-import * as rp from 'request-promise-native';
+import {HttpClient} from "../util/http-client";
 
 const DOTVALUE_UNDEFINED = 'u ';
 const DOTVALUE_UPTODATE = '+ ';
@@ -8,13 +8,14 @@ const DOTVALUE_OUTOFDATE = '- ';
 const DOTVALUE_INSECURE = ' -';
 
 export class DavidDmTransformer {
-    constructor(private githubRepoPath: string) {
+    constructor(private httpClient: HttpClient,
+                private githubRepoPath: string) {
 
     }
 
     public load(): Promise<HardStatusResponse> {
         const url = `https://david-dm.org/${this.githubRepoPath}/info.json`;
-        return rp.get(url)
+        return this.httpClient.get(url)
             .then(JSON.parse)
             .then(data => {
                 return davidDmResponseToDots(data, url);

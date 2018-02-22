@@ -1,4 +1,5 @@
 import {Util} from "./util";
+import {HttpClient} from "./http-client";
 
 describe('Class: Util', () => {
     describe('Static Function: allAsArray', () => {
@@ -22,7 +23,7 @@ describe('Class: Util', () => {
             const givenUrl = 'http://example.com';
 
             // when
-            const actualResult = Util.getConcourseTransformerFor(givenUrl);
+            const actualResult = Util.getConcourseTransformerFor(new HttpClient(), givenUrl);
 
             // then
             expect(actualResult.constructor.name).toEqual('ConcourseTransformer');
@@ -35,7 +36,7 @@ describe('Class: Util', () => {
             const givenPath = 'some/repo';
 
             // when
-            const actualResult = Util.getDavidDmTransformerFor(givenPath);
+            const actualResult = Util.getDavidDmTransformerFor(new HttpClient(), givenPath);
 
             // then
             expect(actualResult.constructor.name).toEqual('DavidDmTransformer');
@@ -48,7 +49,7 @@ describe('Class: Util', () => {
             const givenPath = 'some/repo';
 
             // when
-            const actualResult = Util.getCoverallsTransformerFor(givenPath);
+            const actualResult = Util.getCoverallsTransformerFor(new HttpClient(), givenPath);
 
             // then
             expect(actualResult.constructor.name).toEqual('CoverallsTransformer');

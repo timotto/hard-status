@@ -1,8 +1,9 @@
 import {HardStatusResponse} from "../hard-status-response";
-import * as request from 'request';
+import {HttpClient} from "../util/http-client";
 
 export class CoverallsTransformer {
-    constructor(private githubRepoPath: string) {
+    constructor(private httpClient: HttpClient,
+                private githubRepoPath: string) {
         if (githubRepoPath === undefined)
             throw 'githubRepoPath cannot be undefined';
         if (!githubRepoPath.match("^[0-9a-zA-Z-_]+/[0-9a-zA-Z-_]+$"))
@@ -10,20 +11,19 @@ export class CoverallsTransformer {
     }
 
     public load(): Promise<HardStatusResponse> {
-        return new Promise((resolve, reject) => {
-            const uri = `https://coveralls.io/repos/github/${this.githubRepoPath}/badge.svg?branch=master`;
-            request.head(uri, {followRedirect: false}, (error, response) => {
-                if (error) return reject(error);
-                const dot = CoverallsTransformer.dotFromCoverage(
-                    CoverallsTransformer.coverageFromHeaders(
-                        response.headers));
-                const result = {
-                    url: uri,
-                    dots: [dot],
-                };
-                resolve(result);
-            });
-        });
+        const uri = `https://coveralls.io/repos/github/${this.githubRepoPath}/badge.svg?branch=master`;
+        return this.httpClient.head({uri: uri, followRedirect: false})
+            .catch(non200Response => {
+                    if (non200Response.statusCode === 302 || non200Response.statusCode === 304)
+                        return {
+                            url: uri,
+                            dots: [CoverallsTransformer.dotFromCoverage(
+                                CoverallsTransformer.coverageFromHeaders(
+                                    non200Response.response))]
+                        };
+                    throw non200Response;
+                }
+            );
     }
 
     static coverageFromHeaders(headers: any): number|undefined {

@@ -4,6 +4,8 @@ import {ConcourseTransformer} from "../transformer/concourse-transformer";
 import {DavidDmTransformer} from "../transformer/david-dm-transformer";
 import {CoverallsTransformer} from "../transformer/coveralls-transformer";
 import {Util} from "../util/util";
+import {HttpClient} from "../util/http-client";
+import any = jasmine.any;
 
 describe('MixedEndpoint', () => {
     let unitUnderTest: MixedEndpoint;
@@ -134,8 +136,8 @@ describe('MixedEndpoint', () => {
 
             // then
             expect(Util.getConcourseTransformerFor).toHaveBeenCalledTimes(2);
-            expect(Util.getConcourseTransformerFor).toHaveBeenCalledWith(givenUrl1);
-            expect(Util.getConcourseTransformerFor).toHaveBeenCalledWith(givenUrl2);
+            expect(Util.getConcourseTransformerFor).toHaveBeenCalledWith(any(HttpClient), givenUrl1);
+            expect(Util.getConcourseTransformerFor).toHaveBeenCalledWith(any(HttpClient), givenUrl2);
 
             expect(mockConcourseTransformer.load).toHaveBeenCalledTimes(2);
         });
@@ -150,8 +152,8 @@ describe('MixedEndpoint', () => {
 
             // then
             expect(Util.getDavidDmTransformerFor).toHaveBeenCalledTimes(2);
-            expect(Util.getDavidDmTransformerFor).toHaveBeenCalledWith(givenUrl1);
-            expect(Util.getDavidDmTransformerFor).toHaveBeenCalledWith(givenUrl2);
+            expect(Util.getDavidDmTransformerFor).toHaveBeenCalledWith(any(HttpClient), givenUrl1);
+            expect(Util.getDavidDmTransformerFor).toHaveBeenCalledWith(any(HttpClient), givenUrl2);
 
             expect(mockDavidDmTransformer.load).toHaveBeenCalledTimes(2);
         });
@@ -166,8 +168,8 @@ describe('MixedEndpoint', () => {
 
             // then
             expect(Util.getCoverallsTransformerFor).toHaveBeenCalledTimes(2);
-            expect(Util.getCoverallsTransformerFor).toHaveBeenCalledWith(givenUrl1);
-            expect(Util.getCoverallsTransformerFor).toHaveBeenCalledWith(givenUrl2);
+            expect(Util.getCoverallsTransformerFor).toHaveBeenCalledWith(any(HttpClient), givenUrl1);
+            expect(Util.getCoverallsTransformerFor).toHaveBeenCalledWith(any(HttpClient), givenUrl2);
 
             expect(mockCoverallsTransformer.load).toHaveBeenCalledTimes(2);
         });

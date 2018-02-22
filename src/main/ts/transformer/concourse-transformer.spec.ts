@@ -1,6 +1,7 @@
 import * as nock from "nock";
 import {ConcourseTransformer} from "./concourse-transformer";
 import {StatusCodeError} from "request-promise/errors";
+import {HttpClient} from "../util/http-client";
 
 const testConcourseUrl = 'https://concourse-web.example.com';
 
@@ -8,7 +9,9 @@ describe('Class: ConcourseTransformer', () => {
     let unitUnderTest: ConcourseTransformer;
 
     beforeEach(() => {
-        unitUnderTest = new ConcourseTransformer(testConcourseUrl);
+        unitUnderTest = new ConcourseTransformer(
+            new HttpClient(),
+            testConcourseUrl);
     });
 
     afterEach(() => {
@@ -79,7 +82,7 @@ describe('Class: ConcourseTransformer', () => {
                     const mockJobResponse = [{finished_build:{status:"succeeded"}},{finished_build:{status:"succeeded"}},{finished_build:{status:"succeeded"}}];
 
                     // given
-                    unitUnderTest = new ConcourseTransformer(givenConcourseUrl);
+                    unitUnderTest = new ConcourseTransformer(new HttpClient(), givenConcourseUrl);
                     spyOn((unitUnderTest as any), 'apiGet')
                         .and.callFake(path =>
                         Promise.resolve(path === '/pipelines'
@@ -128,7 +131,7 @@ describe('Class: ConcourseTransformer', () => {
                 const givenConcourseUrl = `${expectedConcourseUrl}/teams/${givenTeamName}`;
 
                 // given
-                unitUnderTest = new ConcourseTransformer(givenConcourseUrl);
+                unitUnderTest = new ConcourseTransformer(new HttpClient(), givenConcourseUrl);
                 spyOn((unitUnderTest as any), 'apiGet')
                     .and.returnValue(Promise.resolve());
 
@@ -151,7 +154,7 @@ describe('Class: ConcourseTransformer', () => {
                 const mockJobResponse = [{finished_build:{status:"succeeded"}},{finished_build:{status:"succeeded"}},{finished_build:{status:"succeeded"}}];
 
                 // given
-                unitUnderTest = new ConcourseTransformer(givenConcourseUrl);
+                unitUnderTest = new ConcourseTransformer(new HttpClient(), givenConcourseUrl);
                 spyOn((unitUnderTest as any), 'apiGet')
                     .and.callFake(path =>
                     Promise.resolve(path === '/pipelines'

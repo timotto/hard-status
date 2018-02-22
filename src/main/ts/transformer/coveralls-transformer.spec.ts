@@ -1,6 +1,6 @@
 import {CoverallsTransformer} from "./coveralls-transformer";
-import * as request from 'request';
 import * as nock from 'nock';
+import {HttpClient} from "../util/http-client";
 
 describe('Class: CoverallsTransformer', () => {
     const testGithubRepoPath = 'owner/repo';
@@ -8,14 +8,17 @@ describe('Class: CoverallsTransformer', () => {
 
     let unitUnderTest: CoverallsTransformer;
     let nockScope: nock.Scope;
+    let httpClient: HttpClient;
+
     beforeEach(() => {
         nockScope = nock('https://coveralls.io')
             .head(`/repos/github/${testGithubRepoPath}/badge.svg?branch=master`)
             .reply(304, 'redirected', {
                 Location: `https://s3.amazonaws.com/assets.coveralls.io/badges/coveralls_${coverageValueInRedirect}.svg`
             });
+        httpClient = new HttpClient();
 
-        unitUnderTest = new CoverallsTransformer(testGithubRepoPath);
+        unitUnderTest = new CoverallsTransformer(httpClient, testGithubRepoPath);
     });
     afterEach(() => {
         nock.cleanAll();
@@ -30,7 +33,7 @@ describe('Class: CoverallsTransformer', () => {
                 'space values/with slash'
             ].forEach(value => {
                 try {
-                    new CoverallsTransformer(value);
+                    new CoverallsTransformer(httpClient, value);
                     fail(`no error with "${value}" as argument`);
                 } catch (e) {
                     expect(e).toBeDefined();
@@ -39,7 +42,7 @@ describe('Class: CoverallsTransformer', () => {
         });
         it('accepts plausible github repo values', () => {
             ['owner/repo','owner-name/repo-name','0123owner/repo322'].forEach(
-                value => new CoverallsTransformer(value));
+                value => new CoverallsTransformer(httpClient, value));
         });
     });
     describe('Function: load', () => {
@@ -59,18 +62,24 @@ describe('Class: CoverallsTransformer', () => {
             // then
             expect(actualResult.dots).toEqual([expectedResult]);
         });
-        it('rejects the promise of the HEAD request returns an error', async () => {
+        it('rejects the promise if the HEAD request returns an error', async () => {
             const expectedReason = 'expected reason';
+            const expectedStatusCode = 500;
 
             // given
-            spyOn(request, 'head')
-                .and.callFake((uri, options, cb) => cb(expectedReason));
+            nock.cleanAll();
+            nockScope = nock('https://coveralls.io')
+                .head(`/repos/github/${testGithubRepoPath}/badge.svg?branch=master`)
+                .reply(expectedStatusCode, expectedReason);
 
             // when
             await unitUnderTest.load()
                 .then(() => fail())
-                // then
-                .catch(e => expect(e).toEqual(expectedReason))
+                .catch(e => {
+                    // then
+                    expect(e.statusCode).toEqual(expectedStatusCode);
+                    expect(e.error).toEqual(expectedReason);
+                })
         });
     });
     describe('Static Function: coverageFromHeaders', () => {

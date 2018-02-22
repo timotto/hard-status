@@ -1,12 +1,14 @@
 import * as rp from 'request-promise-native';
 import {HardStatusResponse} from "../hard-status-response";
+import {HttpClient} from "../util/http-client";
 
 export class ConcourseTransformer {
 
     private team: string = undefined;
     private pipelinesOnly: boolean = false;
 
-    constructor(private concourseUrl: string) {
+    constructor(private httpClient: HttpClient,
+                private concourseUrl: string) {
         this.processConcourseUrl(concourseUrl);
     }
 

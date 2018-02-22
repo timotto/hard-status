@@ -2,8 +2,11 @@ import {Router, Request, Response} from 'express';
 import {ConcourseTransformer} from "../transformer/concourse-transformer";
 import * as accepts from 'accepts';
 import {HardStatusResponse} from "../hard-status-response";
+import {HttpClient} from "../util/http-client";
 
 export class ConcourseEndpoint {
+
+    private httpClient: HttpClient = new HttpClient();
 
     constructor(readonly router: Router) {
         this.router.get('/', (req: Request, res: Response) => this.requestHandler(req, res));
@@ -13,7 +16,7 @@ export class ConcourseEndpoint {
         const url = req.query['url'];
         if (url === undefined) return res.status(400).send('error: url parameter is missing');
 
-        return this.formatResponse(req, res, new ConcourseTransformer(url).load());
+        return this.formatResponse(req, res, new ConcourseTransformer(this.httpClient, url).load());
     }
 
     private formatResponse(req: Request, res: Response, loadPromise: Promise<HardStatusResponse>) {
