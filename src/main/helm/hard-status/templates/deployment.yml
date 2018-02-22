@@ -19,12 +19,14 @@ spec:
           image: {{.Values.imageRegistry}}/{{.Values.imageName}}:v{{.Values.version}}
           imagePullPolicy: Always
           env:
+          {{ if .Values.documentBaseUrl }}
           - name: DOCUMENT_BASE_URL
             value: {{.Values.documentBaseUrl}}
+          {{ end }}
           - name: REDIS_URL
             value: {{.Values.redisUrl}}
           - name: CACHE_TIME
-            value: {{.Values.cacheTime}}
+            value: {{.Values.cacheTime | quote}}
           resources:
             limits:
               cpu: "0.5"
