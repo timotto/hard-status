@@ -1,4 +1,3 @@
-import * as rp from 'request-promise-native';
 import {HardStatusResponse} from "../hard-status-response";
 import {HttpClient} from "../util/http-client";
 
@@ -164,7 +163,7 @@ export class ConcourseTransformer {
 
     private apiGet(path: string): Promise<any> {
         const url = `${this.concourseUrl}/api/v1${path}`;
-        return rp.get(url)
+        return this.httpClient.get(url)
             .then(JSON.parse);
     }
 }
