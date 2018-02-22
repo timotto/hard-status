@@ -21,6 +21,10 @@ spec:
           env:
           - name: DOCUMENT_BASE_URL
             value: {{.Values.documentBaseUrl}}
+          - name: REDIS_URL
+            value: {{.Values.redisUrl}}
+          - name: CACHE_TIME
+            value: {{.Values.cacheTime}}
           resources:
             limits:
               cpu: "0.5"

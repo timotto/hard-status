@@ -4,3 +4,5 @@ imageName: hard-status
 imageSecret: my-registry
 redisDockerImage: redis
 redisReplicas: 1
+redisUrl: redis://redis-service:6379
+cacheTime: 15
