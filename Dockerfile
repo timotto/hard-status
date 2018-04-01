@@ -1,4 +1,4 @@
-FROM node:9-alpine AS build
+FROM node:8-alpine AS build
 
 ADD . /build
 
@@ -10,7 +10,7 @@ RUN yarn install && \
     rm -rf node_modules/ && \
     yarn install --production=true
 
-FROM node:9-alpine AS runtime
+FROM node:8-alpine AS runtime
 
 COPY --from=build /build /app
 
