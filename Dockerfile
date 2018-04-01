@@ -4,8 +4,7 @@ ADD . /build
 
 WORKDIR /build
 
-RUN npm install -g yarn && \
-    yarn install && \
+RUN yarn install && \
     yarn run test && \
     yarn run tsc && \
     rm -rf node_modules/ && \
