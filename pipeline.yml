@@ -583,7 +583,7 @@ resources:
   type: docker-image
   source:
     repository: node
-    tag: 8-alpine
+    tag: 9-alpine
 
 - name: release
   type: docker-image
