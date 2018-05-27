@@ -44,6 +44,7 @@ int led_initialDirection = 0;
 #define COLOR_ORDER GRB
 
 CRGB leds[LED_PIXEL_COUNT];
+CRGB leds_buffer[LED_PIXEL_COUNT];
 
 struct animation_state_t
 {
@@ -99,7 +100,7 @@ void FastLEDshowTask(void *pvParameters) {
 }
 
 void setup_led() {
-  FastLED.addLeds<LED_TYPE,LED_PIN,COLOR_ORDER>(leds, LED_PIXEL_COUNT).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<LED_TYPE,LED_PIN,COLOR_ORDER>(leds_buffer, LED_PIXEL_COUNT).setCorrection(TypicalLEDStrip);
   FastLED.setBrightness(BRIGHTNESS);
   FastLED.setDither( 0 );
 
@@ -129,6 +130,8 @@ void loop_led(bool force) {
 
   restartFinishedAnimations();
   animations.UpdateAnimations();
+
+  for(int i=0; i<LED_PIXEL_COUNT;i++) leds_buffer[i] = leds[i];
   FastLEDshowESP32();
 }
 
