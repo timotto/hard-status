@@ -14,6 +14,7 @@ git clone neopixelbus-library-source $HOME/Arduino/libraries/NeoPixelBus
 git clone webserver-library-source $HOME/Arduino/libraries/WebServer_tng
 git clone arduinojson-library-source $HOME/Arduino/libraries/ArduinoJson
 git clone libyuarel-library-source $HOME/Arduino/libraries/yuarel
+git clone fastled-library-source $HOME/Arduino/libraries/FastLED
 
 cp -v "$HTML"/html.h "$SRC"/src/arduino/hard-status-esp32/html.h
 cp -v "$DEFAULTS"/defaults.h "$SRC"/src/arduino/hard-status-esp32/defaults.h
