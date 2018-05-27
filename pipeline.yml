@@ -55,7 +55,6 @@ jobs:
     - get: source-code
       trigger: true
     - get: base-image
-      trigger: true
   - task: test
     image: base-image
     file: source-code/src/main/ci/unit.yml
