@@ -1,11 +1,20 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+// NeoPixelBus
+//#include <NeoPixelBus.h>
+//#include <NeoPixelBrightnessBus.h>
+//#include <NeoPixelAnimator.h>
+//typedef RgbColor PixelColor_t;
+
+// FastLED
+#include "FastLED.h"
+typedef CRGB PixelColor_t;
+
+#include <NeoPixelAnimator.h>
+
 #include <WiFi.h>
 #include <ArduinoJson.h>
-#include <NeoPixelBus.h>
-#include <NeoPixelBrightnessBus.h>
-#include <NeoPixelAnimator.h>
 #include <FS.h>
 #include <SPIFFS.h>
 

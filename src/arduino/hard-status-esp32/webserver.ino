@@ -131,7 +131,11 @@ void webserver_handle_save() {
     needReboot = true;
   }
 
-  if (root.containsKey("api") && url_verify(root["api"].as<char*>())) strncpy(config.apiUrl, root["api"].as<char*>(), sizeof(config.apiUrl));
+  if (root.containsKey("api") && url_verify(root["api"].as<char*>())) {
+    DEBUGf("strncpy(config.apiUrl, JSON, %d): [%s]\n", sizeof(config.apiUrl), config.apiUrl);
+    strncpy(config.apiUrl, root["api"].as<char*>(), sizeof(config.apiUrl));
+  }
+//  if (root.containsKey("api") && url_verify(root["api"].as<char*>())) strncpy(config.apiUrl, root["api"].as<char*>(), sizeof(config.apiUrl));
   if (root.containsKey("ota") && url_verify(root["ota"].as<char*>())) strncpy(config.otaUrl, root["ota"].as<char*>(), sizeof(config.otaUrl));
   if (root.containsKey("otaauth")) strncpy(config.otaAuth, root["otaauth"].as<char*>(), sizeof(config.otaAuth));
 

@@ -97,6 +97,7 @@ void setup_api_request() {
     converted.query_string==NULL?"":"?", 
     converted.query_string==NULL?"":converted.query_string, 
     converted.host, apiId);
+  DEBUGf("API: setup: request:\n---SNIP---\n%s---SNAP---\n", api_request);
   api_setup_ok = true;
 }
 

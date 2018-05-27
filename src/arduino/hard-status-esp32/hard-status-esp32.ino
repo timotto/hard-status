@@ -35,8 +35,6 @@ void second_core_task( void * pvParameters) {
 
 void setup() {
   Serial.begin(115200);
-  DEBUG("setup(sync) waiting");
-  delay(500);
   DEBUG("setup(sync) started");
   
   setup_async_fs();
