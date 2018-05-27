@@ -122,12 +122,13 @@ void loop_led_force() {
 }
 
 void loop_led(bool force) {
-  restartFinishedAnimations();
-  animations.UpdateAnimations();
-
   static uint32_t next = 0;
   const uint32_t now = millis();
+  if (!force && next > now) return;
   next = now + 20;
+
+  restartFinishedAnimations();
+  animations.UpdateAnimations();
   FastLEDshowESP32();
 }
 
