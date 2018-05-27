@@ -570,6 +570,8 @@ jobs:
 resources:
 - name: source-code
   type: git
+  webhook_token: ((webhook_token.source-code))
+  check_every: 24h
   source:
     <<: *project-source
     paths:
@@ -638,6 +640,8 @@ resources:
 
 - name: hard-status-esp32-source
   type: git
+  webhook_token: ((webhook_token.hard-status-esp32-source))
+  check_every: 24h
   source:
     <<: *project-source
     paths:
@@ -646,6 +650,8 @@ resources:
 
 - name: arduino-ci
   type: git
+  webhook_token: ((webhook_token.arduino-ci))
+  check_every: 24h
   source:
     <<: *project-source
     paths:
@@ -654,6 +660,8 @@ resources:
 
 - name: arduino-docker-source
   type: git
+  webhook_token: ((webhook_token.arduino-docker-source))
+  check_every: 24h
   source:
     <<: *project-source
     paths:
@@ -663,6 +671,8 @@ resources:
 
 - name: arduino-esp32-docker-source
   type: git
+  webhook_token: ((webhook_token.arduino-esp32-docker-source))
+  check_every: 24h
   source:
     <<: *project-source
     paths:
@@ -735,6 +745,8 @@ resources:
 
 - name: neopixelbus-library-source
   type: git
+  webhook_token: ((webhook_token.neopixelbus-library-source))
+  check_every: 24h
   source:
     uri: https://github.com/timotto/NeoPixelBus.git
 
@@ -750,6 +762,8 @@ resources:
 
 - name: 3d-source
   type: git
+  webhook_token: ((webhook_token.3d-source))
+  check_every: 24h
   source:
     <<: *project-source
     paths:
