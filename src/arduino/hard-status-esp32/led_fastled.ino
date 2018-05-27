@@ -75,7 +75,7 @@ void FastLEDshowESP32() {
         xTaskNotifyGive(FastLEDshowTaskHandle);
 
         // -- Wait to be notified that it's done
-        const TickType_t xMaxBlockTime = pdMS_TO_TICKS( 100 );
+        const TickType_t xMaxBlockTime = pdMS_TO_TICKS( 250 );
         ulTaskNotifyTake(pdTRUE, xMaxBlockTime);
         userTaskHandle = 0;
     }
