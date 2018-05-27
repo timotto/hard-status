@@ -435,6 +435,8 @@ jobs:
     - get: libyuarel-library-source
       trigger: true
       passed: [libyuarel-test]
+    - get: fastled-library-source
+      trigger: true
   - task: html
     file: arduino-ci/src/arduino/ci/build-html.yml
   - aggregate:
@@ -759,6 +761,11 @@ resources:
   type: git
   source:
     uri: https://github.com/jacketizer/libyuarel.git
+
+- name: fastled-library-source
+  type: git
+  source:
+    uri: https://github.com/FastLED/FastLED.git
 
 - name: 3d-source
   type: git
