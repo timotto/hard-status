@@ -70,6 +70,8 @@ void FastLEDshowESP32() {
   if (userTaskHandle != 0) 
     return;
 
+  delay(1);
+  
   // -- Store the handle of the current task, so that the show task can
   //    notify it when it's done
   userTaskHandle = xTaskGetCurrentTaskHandle();
