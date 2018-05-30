@@ -67,19 +67,20 @@ static TaskHandle_t userTaskHandle = 0;
  *  then waits for a notification that it is done.
  */
 void FastLEDshowESP32() {
-    if (userTaskHandle == 0) {
-        // -- Store the handle of the current task, so that the show task can
-        //    notify it when it's done
-        userTaskHandle = xTaskGetCurrentTaskHandle();
+  if (userTaskHandle != 0) 
+    return;
 
-        // -- Trigger the show task
-        xTaskNotifyGive(FastLEDshowTaskHandle);
+  // -- Store the handle of the current task, so that the show task can
+  //    notify it when it's done
+  userTaskHandle = xTaskGetCurrentTaskHandle();
 
-        // -- Wait to be notified that it's done
-        const TickType_t xMaxBlockTime = pdMS_TO_TICKS( 250 );
-        ulTaskNotifyTake(pdTRUE, xMaxBlockTime);
-        userTaskHandle = 0;
-    }
+  // -- Trigger the show task
+  xTaskNotifyGive(FastLEDshowTaskHandle);
+
+  // -- Wait to be notified that it's done
+  const TickType_t xMaxBlockTime = pdMS_TO_TICKS( 250 );
+  ulTaskNotifyTake(pdTRUE, xMaxBlockTime);
+  userTaskHandle = 0;
 }
 
 /** show Task
