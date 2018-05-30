@@ -67,8 +67,9 @@ void setup_async() {
 }
 
 void loop() {
-  // The main purpose of this loop()
-  loop_led();
+  loop_wifi();
+  loop_ota_async();
+  loop_api();
 
   // When OTA from Arduino IDE is active, there's another inner loop that keeps calling loop_led()
   loop_ota_sync();
@@ -87,10 +88,7 @@ void loop() {
  * (almose) all blocking IO related tasks
  */
 void loop_async() {
-  loop_wifi();
-  loop_ota_async();
-  loop_api();
-
-  delay(1);
+  // The main purpose of this loop()
+  loop_led();
 }
 

@@ -35,7 +35,7 @@ PixelColor_t led_initialColors[2] = {black,green};
 int led_initialFactor = 10;
 int led_initialDirection = 0;
 
-#define FASTLED_SHOW_CORE 0
+#define FASTLED_SHOW_CORE 1
 
 #define BRIGHTNESS          60
 #define FRAMES_PER_SECOND  120
