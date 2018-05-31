@@ -33,7 +33,7 @@ void loop_api() {
   const uint32_t now = millis();
   if (now < nextApiCall) return;
   nextApiCall = now + (1000 * config.apiCheckDelay);
-  
+
   WiFiClientSecure client;
   if (!client.connect(api_host, api_port)) {
     DEBUG("API: https connect failed");

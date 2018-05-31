@@ -22,6 +22,11 @@ cp -v "$HARDWARE"/hardware.h "$SRC"/src/arduino/hard-status-esp32/hardware.h
 
 cd "$SRC"
 
+echo "Patching Arduino-ESP32 to run WiFi on Core#0 instead of Core#1"
+sed \
+  -i /root/Arduino/hardware/espressif/esp32/libraries/WiFi/src/WiFiGeneric.cpp \
+  -e's/define ARDUINO_RUNNING_CORE 1/define ARDUINO_RUNNING_CORE 0/'
+
 arduino --verbose --verify --preserve-temp-files \
   --board espressif:esp32:lolin32 --pref build.flash_freq=80m \
   src/arduino/hard-status-esp32/hard-status-esp32.ino

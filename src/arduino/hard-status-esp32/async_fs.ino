@@ -57,7 +57,7 @@ void setup_async_fs() {
 }
 
 void setup_async_fs_async() {
-  asyncFsInitialized = true;
+//  asyncFsInitialized = true;
 }
 
 void loop_async_fs() {

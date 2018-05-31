@@ -110,7 +110,7 @@ void setup_led() {
     int core = xPortGetCoreID();
     Serial.print("Main code running on core ");
     Serial.println(core);
-    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, 2, &FastLEDshowTaskHandle, FASTLED_SHOW_CORE);
+    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, configMAX_PRIORITIES - 1, &FastLEDshowTaskHandle, FASTLED_SHOW_CORE);
 
   led_update_brightness();
   setupAnimations();
@@ -135,7 +135,8 @@ void loop_led(bool force) {
   animations.UpdateAnimations();
 
   for(int i=0; i<LED_PIXEL_COUNT;i++) leds_buffer[i] = leds[i];
-  FastLEDshowESP32();
+//  FastLEDshowESP32();
+  FastLED.show();
 }
 
 void led_update_brightness() {
