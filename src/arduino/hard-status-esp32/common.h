@@ -27,6 +27,7 @@ typedef CRGB PixelColor_t;
 #define OTA_STATE_PUSH  1
 #define OTA_STATE_LOAD  2
 #define OTA_STATE_FLASH 3
+#define OTA_STATE_REBOOT 4
 #define OTA_STATE_ERROR 9
 
 // if changed will trigger reset of config

@@ -14,11 +14,11 @@ void loop_config() {}
 
 void config_load() {
   memset(&config, 0, sizeof(config_t));
-  int configFile = async_fs_open("/config", FILE_READ);
+  File configFile = SPIFFS.open("/config", FILE_READ);
   if (configFile >= 0) {
-    if (async_fs_size(configFile) > 0) {
-      async_fs_read(configFile, (uint8_t*)&config, sizeof(config_t));
-      async_fs_close(configFile);
+    if (configFile.size() > 0) {
+      configFile.read((uint8_t*)&config, sizeof(config_t));
+      configFile.close();
       if (config.version != CONFIG_VERSION || config.maxStringLength != MAX_STRING_LENGTH || config.maxUserWifi != MAX_USER_WIFI) {
         DEBUGf("Config: load: incompatible version: firmware vs config: version=[%d/%d] strlen=[%d/%d] wifis=[%d/%d]\n", 
           CONFIG_VERSION, config.version,
@@ -70,10 +70,11 @@ void config_load_defaults() {
 }
 
 void config_save() {
-  int configFile = async_fs_open("/config", FILE_WRITE);
+  File configFile = SPIFFS.open("/config", FILE_WRITE);
   if (configFile >= 0) {
-    async_fs_write(configFile, (uint8_t*)&config, sizeof(config_t));
-    async_fs_close(configFile);
+    configFile.write((uint8_t*)&config, sizeof(config_t));
+    configFile.flush();
+    configFile.close();
   }
 }
 

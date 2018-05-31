@@ -4,9 +4,6 @@
  * restarting animations. The direction is flipped between 1 and -1 after each
  * cycle. A cycle fades the colors from [0] to [1] or vice versa.
  * 
- * The update frequency is limited to 50Hz because the ESP32 WS2812 implementation 
- * in NeoPixelBus is bit-banging and does not allow the WiFi stack to run.
- * 
  * The WiFi state (disconnected) is shown using a slightly orange background color
  * instead of the default black.
  * 
@@ -59,58 +56,10 @@ AnimEaseFunction easings[] = {NeoEase::CubicIn, NeoEase::CubicOut};
 
 NeoPixelAnimator animations(LED_PIXEL_COUNT, NEO_MILLISECONDS);
 
-static TaskHandle_t FastLEDshowTaskHandle = 0;
-static TaskHandle_t userTaskHandle = 0;
-
-/** show() for ESP32
- *  Call this function instead of FastLED.show(). It signals core 0 to issue a show, 
- *  then waits for a notification that it is done.
- */
-void FastLEDshowESP32() {
-  if (userTaskHandle != 0) 
-    return;
-
-  delay(1);
-  
-  // -- Store the handle of the current task, so that the show task can
-  //    notify it when it's done
-  userTaskHandle = xTaskGetCurrentTaskHandle();
-
-  // -- Trigger the show task
-  xTaskNotifyGive(FastLEDshowTaskHandle);
-
-  // -- Wait to be notified that it's done
-  const TickType_t xMaxBlockTime = pdMS_TO_TICKS( 250 );
-  ulTaskNotifyTake(pdTRUE, xMaxBlockTime);
-  userTaskHandle = 0;
-}
-
-/** show Task
- *  This function runs on core 0 and just waits for requests to call FastLED.show()
- */
-void FastLEDshowTask(void *pvParameters) {
-    // -- Run forever...
-    for(;;) {
-        // -- Wait for the trigger
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-        // -- Do the show (synchronously)
-        FastLED.show();
-
-        // -- Notify the calling task
-        xTaskNotifyGive(userTaskHandle);
-    }
-}
-
 void setup_led() {
   FastLED.addLeds<LED_TYPE,LED_PIN,COLOR_ORDER>(leds_buffer, LED_PIXEL_COUNT).setCorrection(TypicalLEDStrip);
   FastLED.setBrightness(BRIGHTNESS);
   FastLED.setDither( 0 );
-
-    int core = xPortGetCoreID();
-    Serial.print("Main code running on core ");
-    Serial.println(core);
-    xTaskCreatePinnedToCore(FastLEDshowTask, "FastLEDshowTask", 2048, NULL, configMAX_PRIORITIES - 1, &FastLEDshowTaskHandle, FASTLED_SHOW_CORE);
 
   led_update_brightness();
   setupAnimations();
@@ -118,24 +67,17 @@ void setup_led() {
 }
 
 void loop_led() {
-  loop_led(false);
-}
-
-void loop_led_force() {
-  loop_led(true);
-}
-
-void loop_led(bool force) {
   static uint32_t next = 0;
   const uint32_t now = millis();
-  if (!force && next > now) return;
+  if (next > now) return;
   next = now + 20;
 
   restartFinishedAnimations();
   animations.UpdateAnimations();
 
-  for(int i=0; i<LED_PIXEL_COUNT;i++) leds_buffer[i] = leds[i];
-//  FastLEDshowESP32();
+  for(int i=0; i<LED_PIXEL_COUNT;i++) 
+    leds_buffer[i] = leds[i];
+  
   FastLED.show();
 }
 
@@ -195,9 +137,14 @@ void led_show_ota() {
       led_initialFactor = 1;
       led_initialDirection = 0;
       break;
+    case OTA_STATE_REBOOT: 
+      led_initialColors[0] = black;
+      led_initialColors[1] = black;
+      led_initialFactor = 1;
+      led_initialDirection = 0;
+      break;
   }
   setupAnimations();
-  loop_led_force();
 }
 
 void led_show_wifi() {

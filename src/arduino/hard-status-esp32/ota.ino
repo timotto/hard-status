@@ -30,7 +30,7 @@ int otaContentLength = 0;
 String getHeaderValue(String header, String headerName);
 
 uint32_t otaPushNextPrint = 0;
-// called from sketch setup_sync()
+
 void setup_ota_sync() {
   DEBUG("OTA: setup: push: started");
   ArduinoOTA
@@ -50,7 +50,6 @@ void setup_ota_sync() {
       Serial.println("OTA: push: end");
     })
     .onProgress([](unsigned int progress, unsigned int total) {
-      loop_led();
       if (millis() < otaPushNextPrint) return;
       otaPushNextPrint = millis() + 1000;
       Serial.printf("OTA: push: progress: %u%%\n", (progress / (total / 100)));
@@ -68,7 +67,6 @@ void setup_ota_sync() {
   DEBUG("OTA: setup: push: complete");
 }
 
-// called from sketch setup_async()
 void setup_ota_async() {
   DEBUG("OTA: setup: pull: started");
   setup_ota_lastModified();
@@ -78,20 +76,20 @@ void setup_ota_async() {
 
 void setup_ota_lastModified() {
   strncpy(ota_last_modified, "", sizeof(ota_last_modified));
-  int firmwareDateFile = async_fs_open("/firmware.date", FILE_READ);
-  if (firmwareDateFile < 0) {
+  File firmwareDateFile = SPIFFS.open("/firmware.date", FILE_READ);
+  if (!firmwareDateFile) {
     DEBUG("OTA: setup: pull: cannot open /firmware.date");
     return;
   }
   
   char tmp[bufferLength];
-  int len = async_fs_read(firmwareDateFile, (uint8_t*)tmp, bufferLength - 1);
+  int len = firmwareDateFile.read((uint8_t*)tmp, bufferLength - 1);
   tmp[len++] = 0;
 
   if (strlen(tmp) == 0) return;
   
   sprintf(ota_last_modified, "If-Modified-Since: %s\n", tmp);
-  async_fs_close(firmwareDateFile);
+  firmwareDateFile.close();
   DEBUGf("OTA: setup: pull: have firmware date: [%s] (%d)\n", tmp, strlen(tmp));
 }
 
@@ -159,7 +157,6 @@ void loop_ota_sync() {
     int written = 0;
     int total = file.size();
     while(total > written) {
-      loop_led();
       pos = file.read(buffer, 512);
       wrx = Update.write(buffer, pos);
       written += wrx;
@@ -177,7 +174,8 @@ void loop_ota_sync() {
           SPIFFS.remove("/firmware.date");
           SPIFFS.rename("/ota.date", "/firmware.date");
           SPIFFS.remove("/ota.bin");
-          ESP.restart();
+          led_show_ota();
+          otaState = OTA_STATE_REBOOT;
           return;
         } else Serial.println("Update not finished? Something went wrong!");
       } else Serial.println("Error Occurred. Error #: " + String(Update.getError()));
@@ -186,7 +184,11 @@ void loop_ota_sync() {
   otaState = OTA_STATE_ERROR;
 }
 
-// called from sketch loop_async()
+void loop_ota_reboot() {
+  if (otaState == OTA_STATE_REBOOT)
+    ESP.restart();
+}
+
 void loop_ota_async() {
   switch(wifiState) {
     case WL_CONNECTED:
@@ -253,8 +255,8 @@ void loop_ota_async() {
   }
   uint8_t buffer[bufferLength];
   int bufferPos = 0;
-  int otaDataFile = async_fs_open("/ota.bin", FILE_WRITE);
-  if (otaDataFile < 0) {
+  File otaDataFile = SPIFFS.open("/ota.bin", FILE_WRITE);
+  if (!otaDataFile) {
     DEBUG("OTA: pull: error: failed to create /ota.bin file");
     otaState = OTA_STATE_ERROR;
     return;
@@ -274,28 +276,30 @@ void loop_ota_async() {
         Serial.printf("OTA: pull: download progress: %d bytes\n", total);
         nextTime = millis() + 1000;
       }
-      if(0 > async_fs_write(otaDataFile, buffer, bufferPos)) {
+      if(0 > otaDataFile.write(buffer, bufferPos)) {
         wfail++;
       } else wok++;
     }
   }
   Serial.printf("OTA: pull: download result: %d bytes (%.2fkB/s), writes: %d OK, %d failed\n", 
     total, (total * 1.024) / (millis() - tstart), wok, wfail);
-  async_fs_close(otaDataFile);
+  otaDataFile.flush();
+  otaDataFile.close();
   if (wfail > 0) {
     DEBUG("OTA: pull: error: download incomplete");
     otaState = OTA_STATE_ERROR;
     return;
   }
 
-  int otaDateFile = async_fs_open("/ota.date", FILE_WRITE);
-  if (otaDateFile < 0) {
+  File otaDateFile = SPIFFS.open("/ota.date", FILE_WRITE);
+  if (!otaDateFile) {
     DEBUG("OTA: pull: error: failed to create /ota.date file");
     otaState = OTA_STATE_ERROR;
     return;
   }
-  async_fs_write(otaDateFile, (uint8_t*)(lastModified.c_str()), lastModified.length()+1);
-  async_fs_close(otaDateFile);
+  otaDateFile.write((uint8_t*)(lastModified.c_str()), lastModified.length()+1);
+  otaDateFile.flush();
+  otaDateFile.close();
 
   // TODO load signature & verify
   DEBUG("OTA: pull: download complete");
