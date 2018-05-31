@@ -22,9 +22,12 @@ cp -v "$HARDWARE"/hardware.h "$SRC"/src/arduino/hard-status-esp32/hardware.h
 
 cd "$SRC"
 
-echo "Patching Arduino-ESP32 to run WiFi on Core#0 instead of Core#1"
+echo "Patching Arduino-ESP32 to run all Arduino code on Core#0 instead of Core#1"
 sed \
-  -i /root/Arduino/hardware/espressif/esp32/libraries/WiFi/src/WiFiGeneric.cpp \
+  -i $HOME/Arduino/hardware/espressif/esp32/libraries/WiFi/src/WiFiGeneric.cpp \
+  -e's/define ARDUINO_RUNNING_CORE 1/define ARDUINO_RUNNING_CORE 0/'
+sed \
+  -i $HOME/Arduino/hardware/espressif/esp32/cores/esp32/main.cpp \
   -e's/define ARDUINO_RUNNING_CORE 1/define ARDUINO_RUNNING_CORE 0/'
 
 arduino --verbose --verify --preserve-temp-files \
