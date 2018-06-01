@@ -4,6 +4,21 @@
  * This Arduino sketch attempts a smooth LED animation by distributing the work to both LX6 
  * CPU cores usually available on an ESP32 module.
  * 
+ * Unfortunately a hack is required to run the LED update routine on a dedicated core because
+ * both network code as well as the loop() routing run on core#1 while something else is running
+ * on core#0. A small change in two files of the Arduino ESP32 SDK is required to make the network
+ * code and the loop() routine run on core#0 so core#1 can be used by the LED routine exclusively.
+ * 
+ * The CI script for this Arduino sketch does it with sed:
+ * 
+   sed \
+     -i $HOME/Arduino/hardware/espressif/esp32/libraries/WiFi/src/WiFiGeneric.cpp \
+     -e's/define ARDUINO_RUNNING_CORE 1/define ARDUINO_RUNNING_CORE 0/'
+   
+   sed \
+     -i $HOME/Arduino/hardware/espressif/esp32/cores/esp32/main.cpp \
+     -e's/define ARDUINO_RUNNING_CORE 1/define ARDUINO_RUNNING_CORE 0/'
+ * 
  * SoftAP / WiFi hotspot is super buggy, AP takes ages to appear and connections fail often.
  * DNS doesn't seem to work at all. Might be related to second core use.
  * 
