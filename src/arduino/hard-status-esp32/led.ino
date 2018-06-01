@@ -72,7 +72,8 @@ void loop_led() {
 
   for(int i=0; i<LED_PIXEL_COUNT;i++)
     leds_buffer[i] = leds[i];
-  
+  shuffle(leds_buffer);
+
   FastLED.show();
 }
 
@@ -110,6 +111,7 @@ void led_show_progress(PixelColor_t colorDone, PixelColor_t colorPending, unsign
   
   for(i=0;i<limit;i++) leds_buffer[i] = colorDone;
   for(i=limit;i<LED_PIXEL_COUNT;i++) leds_buffer[i] = colorPending;
+  shuffle(leds_buffer);
   
   FastLED.setBrightness(5);
   FastLED.show();

@@ -1,16 +1,10 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
-// NeoPixelBus
-//#include <NeoPixelBus.h>
-//#include <NeoPixelBrightnessBus.h>
-//#include <NeoPixelAnimator.h>
-//typedef RgbColor PixelColor_t;
-
-// FastLED
 #include "FastLED.h"
 typedef CRGB PixelColor_t;
 
+// the sketch started out with NeoPixelBus, now only uses animation from that library
 #include <NeoPixelAnimator.h>
 
 #include <WiFi.h>
