@@ -67,15 +67,10 @@ void setup_led() {
 }
 
 void loop_led() {
-  static uint32_t next = 0;
-  const uint32_t now = millis();
-  if (next > now) return;
-  next = now + 20;
-
   restartFinishedAnimations();
   animations.UpdateAnimations();
 
-  for(int i=0; i<LED_PIXEL_COUNT;i++) 
+  for(int i=0; i<LED_PIXEL_COUNT;i++)
     leds_buffer[i] = leds[i];
   
   FastLED.show();
@@ -107,6 +102,17 @@ PixelColor_t codeToColor(char code) {
     case 'p': return bluish;
     default : return black;
   }
+}
+
+void led_show_progress(PixelColor_t colorDone, PixelColor_t colorPending, unsigned int progress, unsigned int total) {
+  const unsigned int limit = LED_PIXEL_COUNT * progress / total;
+  unsigned int i;
+  
+  for(i=0;i<limit;i++) leds_buffer[i] = colorDone;
+  for(i=limit;i<LED_PIXEL_COUNT;i++) leds_buffer[i] = colorPending;
+  
+  FastLED.setBrightness(5);
+  FastLED.show();
 }
 
 void led_show_ota() {

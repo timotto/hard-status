@@ -46,8 +46,7 @@ void setup() {
   setup_config();
   setup_api();
   setup_wifi();
-  setup_ota_sync();
-  setup_ota_async();
+  setup_ota();
   setup_webserver();
   
   // https://techtutorialsx.com/2017/05/09/esp32-running-code-on-a-specific-core/
@@ -80,9 +79,22 @@ void loop() {
 }
 
 void loop_async() {
-  loop_led();
+  delay(1);
   loop_ota_reboot();
 
-  delay(1);
+  // do not update LED while SPIFFS is active
+  switch(otaState) {
+    case OTA_STATE_PUSH:
+    case OTA_STATE_LOAD:
+    case OTA_STATE_FLASH:
+      return;
+  }
+
+  static uint32_t next = 0;
+  const uint32_t now = millis();
+  if (next > now) return;
+  next = now + 20;
+
+  loop_led();
 }
 

@@ -22,8 +22,6 @@ int ota_port;
 bool ota_https;
 char ota_request[512];
 char ota_last_modified[64];
-bool ota_setup_ok = false;
-
 int otaContentLength = 0;
 
 // Utility to extract header value from headers
@@ -31,8 +29,15 @@ String getHeaderValue(String header, String headerName);
 
 uint32_t otaPushNextPrint = 0;
 
-void setup_ota_sync() {
-  DEBUG("OTA: setup: push: started");
+void setup_ota() {
+  DEBUG("OTA: setup: started");
+  setup_ota_push();
+  setup_ota_lastModified();
+  setup_ota_request();
+  DEBUG("OTA: setup: complete");
+}
+
+void setup_ota_push() {
   ArduinoOTA
     .onStart([]() {
       otaState = OTA_STATE_PUSH;
@@ -51,8 +56,9 @@ void setup_ota_sync() {
     })
     .onProgress([](unsigned int progress, unsigned int total) {
       if (millis() < otaPushNextPrint) return;
-      otaPushNextPrint = millis() + 1000;
+      otaPushNextPrint = millis() + 100;
       Serial.printf("OTA: push: progress: %u%%\n", (progress / (total / 100)));
+      led_show_progress(black, blue, progress, total);
     })
     .onError([](ota_error_t error) {
       Serial.printf("OTA: push: error[%u]: ", error);
@@ -64,14 +70,6 @@ void setup_ota_sync() {
       otaState = OTA_STATE_IDLE;
     });
   ArduinoOTA.begin();
-  DEBUG("OTA: setup: push: complete");
-}
-
-void setup_ota_async() {
-  DEBUG("OTA: setup: pull: started");
-  setup_ota_lastModified();
-  setup_ota_request();
-  DEBUG("OTA: setup: pull: complete");
 }
 
 void setup_ota_lastModified() {
@@ -94,7 +92,6 @@ void setup_ota_lastModified() {
 }
 
 void setup_ota_request() {
-  ota_setup_ok = false;
   struct url_parser_url_t parsed;
   struct wifi_client_url_t converted;
   parse_url(config.otaUrl, &parsed);
@@ -129,10 +126,8 @@ void setup_ota_request() {
     auth ? config.otaAuth : "", 
     auth ? "\r\n" : "",
     ota_last_modified);
-  ota_setup_ok = true;
 }
 
-// called from sketch loop()
 void loop_ota_sync() {
   ArduinoOTA.handle();
   switch(otaState) {
@@ -160,6 +155,13 @@ void loop_ota_sync() {
       pos = file.read(buffer, 512);
       wrx = Update.write(buffer, pos);
       written += wrx;
+
+      if (millis() >= otaPushNextPrint) {;
+        otaPushNextPrint = millis() + 100;
+        Serial.printf("OTA: sync: progress: %u%%\n", (written / (total / 100)));
+        led_show_progress(black, green, total + written, total + total);
+      }
+
       if (pos != wrx) {
         Serial.printf("OTA: Failed to write all bytes, had %d but wrote only %d\n", pos, wrx);
         return;
@@ -207,7 +209,6 @@ void loop_ota_async() {
     default:
       return;
   }
-  if (!ota_setup_ok) return;
   
   static uint32_t nextOtaCall = 0;
   const uint32_t now = millis();
@@ -275,6 +276,11 @@ void loop_ota_async() {
       if (nextTime <= millis()) {
         Serial.printf("OTA: pull: download progress: %d bytes\n", total);
         nextTime = millis() + 1000;
+      }
+      if (millis() >= otaPushNextPrint) {;
+        otaPushNextPrint = millis() + 100;
+        Serial.printf("OTA: sync: download: %u%%\n", (total / (otaContentLength / 100)));
+        led_show_progress(black, green, total, otaContentLength + otaContentLength);
       }
       if(0 > otaDataFile.write(buffer, bufferPos)) {
         wfail++;
