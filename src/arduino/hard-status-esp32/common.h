@@ -55,6 +55,7 @@ typedef struct config_t {
   char otaAuth[256];
   uint16_t apiCheckDelay;
   uint16_t otaCheckDelay;
+  uint16_t pulseFrequency;
 } config_t;
 
 // output from the borrowed url_parser code

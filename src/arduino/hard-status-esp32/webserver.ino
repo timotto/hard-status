@@ -90,6 +90,10 @@ void webserver_handle_status() {
   snprintf(otaDelayStr, sizeof(otaDelayStr), "%d", config.otaCheckDelay);
   root["otadelay"] = otaDelayStr;
   
+  char pulseStr[16];
+  snprintf(pulseStr, sizeof(pulseStr), "%d", config.pulseFrequency);
+  root["pulse"] = pulseStr;
+  
   String json;
   root.printTo(json);
   server.send ( 200, "application/json", json );
@@ -149,9 +153,15 @@ void webserver_handle_save() {
     if (n > 0 && n < 65536) config.otaCheckDelay = n;
   }
 
+  if (root.containsKey("pulse")) {
+    int32_t n = atoi(root["pulse"]);
+    if (n >= 10 && n <= 10000) config.pulseFrequency = n;
+  }
+
   config_load_defaults();
   config_save_sync();
   led_update_brightness();
+  led_reset_pulseFrequency();
   setup_api_request();
   setup_ota_request();
 

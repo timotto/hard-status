@@ -88,7 +88,14 @@ void led_set_color(int pixel, PixelColor_t from, PixelColor_t to) {
 
   led_animation_state[pixel].colors[0] = to;
   led_animation_state[pixel].colors[1] = from;
-  led_animation_state[pixel].time = random(100 * factor, 400 * factor);
+  led_animation_state[pixel].time = random(1 * factor * config.pulseFrequency, 4 * factor * config.pulseFrequency);
+}
+
+void led_reset_pulseFrequency() {
+  for(int pixel=0; pixel<LED_PIXEL_COUNT;pixel++) {
+    const int factor = led_animation_state[pixel].colors[0] == black ? 10 : 1;
+    led_animation_state[pixel].time = random(1 * factor * config.pulseFrequency, 4 * factor * config.pulseFrequency);
+  }
 }
 
 PixelColor_t codeToColor(char code) {
@@ -176,7 +183,7 @@ void setupAnimations() {
     led_animation_state[i].colors[0] = led_initialColors[0];
     led_animation_state[i].colors[1] = led_initialColors[1];
     led_animation_state[i].direction = led_initialDirection;
-    led_animation_state[i].time = random(100 * led_initialFactor, 400 * led_initialFactor);
+    led_animation_state[i].time = random(1 * led_initialFactor * config.pulseFrequency, 4 * led_initialFactor * config.pulseFrequency);
     animations.StartAnimation(i, led_animation_state[i].time, animationHandler);
   }
 }

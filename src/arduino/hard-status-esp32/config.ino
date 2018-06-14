@@ -65,6 +65,8 @@ void config_load_defaults() {
 
   if (config.apiCheckDelay < 1) config.apiCheckDelay = 10;
   if (config.otaCheckDelay < 1) config.otaCheckDelay = 300;
+  if (config.pulseFrequency < 1) config.pulseFrequency = 100;
+  if (config.pulseFrequency > 10000) config.pulseFrequency = 100;
 
   DEBUG("Config: load defaults: complete");
 }
