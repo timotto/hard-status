@@ -42,6 +42,7 @@ void setup() {
   Serial.begin(115200);
   DEBUG("setup(sync) started");
 
+  setup_console();
   setup_shuffle();
   setup_fs();
   setup_config();
@@ -69,6 +70,8 @@ void setup_async() {
 }
 
 void loop() {
+  loop_console();
+
   loop_wifi();
   loop_ota_async();
   loop_api();
