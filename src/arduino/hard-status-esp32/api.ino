@@ -12,6 +12,7 @@ char api_request[2048];
 char api_host[512];
 int api_port;
 bool api_https;
+static int lastKnownPixelCount = 0;
 
 void setup_api() {
   Serial.println("API: setup: started");
@@ -55,16 +56,19 @@ void loop_api() {
   if (n <= 0 || n % 2 != 0) return;
   
   int offset = 0;
-  while(offset < LED_PIXEL_COUNT) {
-    for(int i=0;i<line.length();i+=2) {
-      const int led = offset + (i / 2);
-      if (led >= LED_PIXEL_COUNT) continue;
-      led_set_color(
-        led, 
-        codeToColor(line.charAt(i)), 
-        codeToColor(line.charAt(i+1)));
-    }
-    offset += n/2;
+  int pixels = n /2;
+
+  if (pixels != lastKnownPixelCount) {
+    led_show_default(true);
+    lastKnownPixelCount = pixels;
+  }
+  
+  while(offset < LED_PIXEL_COUNT && offset < pixels) {
+    led_set_color(
+      offset, 
+      codeToColor(line.charAt(offset*2)), 
+      codeToColor(line.charAt(offset*2+1)));
+    offset++;
   }
   nextApiCall = millis() + (1000 * config.apiCheckDelay);
 }

@@ -162,6 +162,14 @@ void led_show_ota() {
   setupAnimations();
 }
 
+void led_show_default(bool trueIsGoodFalseIsBad) {
+  PixelColor_t c = trueIsGoodFalseIsBad ? green : red;
+  for (uint16_t i = 0; i < LED_PIXEL_COUNT; i++) {
+    led_animation_state[i].colors[1] = c;
+    led_animation_state[i].colors[0] = black;
+  }
+}
+
 void led_show_wifi() {
   PixelColor_t next;
   switch(wifiState) {
