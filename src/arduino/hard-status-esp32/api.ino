@@ -80,6 +80,8 @@ void loop_api() {
 
   if (pixels != lastKnownPixelCount || ratioGood != lastKnownRatioGood) {
     led_show_default(ratioGood);
+    led_reset_pulseFrequency();
+
     lastKnownPixelCount = pixels;
     lastKnownRatioGood = ratioGood;
   }
