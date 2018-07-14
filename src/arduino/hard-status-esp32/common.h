@@ -56,6 +56,7 @@ typedef struct config_t {
   uint16_t apiCheckDelay;
   uint16_t otaCheckDelay;
   uint16_t pulseFrequency;
+  uint16_t colorFlipRatio;
 } config_t;
 
 // output from the borrowed url_parser code

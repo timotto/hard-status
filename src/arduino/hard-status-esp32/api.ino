@@ -13,6 +13,7 @@ char api_host[512];
 int api_port;
 bool api_https;
 static int lastKnownPixelCount = 0;
+static boolean lastKnownRatioGood = false;
 
 void setup_api() {
   Serial.println("API: setup: started");
@@ -58,16 +59,39 @@ void loop_api() {
   int offset = 0;
   int pixels = n /2;
 
-  if (pixels != lastKnownPixelCount) {
-    led_show_default(true);
+  uint32_t good = 0;
+  uint32_t bad = 0;
+  uint32_t unknown = 0;
+  offset = 0;
+  while(offset < LED_PIXEL_COUNT && offset < pixels) {
+    const char c0 = line.charAt(offset*2);
+    const char c1 = line.charAt(offset*2+1);
+    switch(c0) {
+      case '+': good++; break;
+      case '-': 
+      case 'a': 
+      case 'e': bad++; break;
+      default: unknown++; break;
+    }
+    offset++;
+  }
+  uint32_t ratio = (good + bad) == 0 ? 5000 : 10000.0 * good / (good + bad);
+  const bool ratioGood = ratio >= config.colorFlipRatio;
+
+  if (pixels != lastKnownPixelCount || ratioGood != lastKnownRatioGood) {
+    led_show_default(ratioGood);
     lastKnownPixelCount = pixels;
+    lastKnownRatioGood = ratioGood;
   }
   
+  offset = 0;
   while(offset < LED_PIXEL_COUNT && offset < pixels) {
+    const char c0 = line.charAt(offset*2);
+    const char c1 = line.charAt(offset*2+1);
     led_set_color(
       offset, 
-      codeToColor(line.charAt(offset*2)), 
-      codeToColor(line.charAt(offset*2+1)));
+      codeToColor(c0), 
+      codeToColor(c1));
     offset++;
   }
   nextApiCall = millis() + (1000 * config.apiCheckDelay);

@@ -58,6 +58,7 @@ void console_set() {
   }
   if (strcmp("brightness", ptr) == 0) console_set_brightness(valPtr);
   else if (strcmp("pulse", ptr) == 0) console_set_pulse(valPtr);
+  else if (strcmp("flip", ptr) == 0) console_set_flip(valPtr);
   else if (strcmp("api", ptr) == 0) console_set_api(valPtr);
   else if (strcmp("otaurl", ptr) == 0) console_set_otaurl(valPtr);
   else if (strcmp("otaauth", ptr) == 0) console_set_otaauth(valPtr);
@@ -84,6 +85,7 @@ void console_get() {
   }
   if (strcmp("brightness", ptr) == 0) console_get_brightness();
   else if (strcmp("pulse", ptr) == 0) console_get_pulse();
+  else if (strcmp("flip", ptr) == 0) console_get_flip();
   else if (strcmp("api", ptr) == 0) console_get_api();
   else if (strcmp("otaurl", ptr) == 0) console_get_otaurl();
   else if (strcmp("otaauth", ptr) == 0) console_get_otaauth();
@@ -114,6 +116,17 @@ void console_set_pulse(char *val) {
 void console_get_pulse() {
   Serial.print("\tpulse\t\t : ");
   Serial.println(config.pulseFrequency);
+}
+
+void console_set_flip(char *val) {
+  uint16_t flip = atoi(val);
+  if (flip >= 10 && flip <= 10000) config.colorFlipRatio = flip;
+  console_get_flip();
+}
+
+void console_get_flip() {
+  Serial.print("\tflip\t\t : ");
+  Serial.println(config.colorFlipRatio);
 }
 
 void console_set_api(char *val) {
@@ -150,6 +163,7 @@ void console_get_otaauth() {
 void console_list() {
   console_get_brightness();
   console_get_pulse();
+  console_get_flip();
   console_get_api();
   console_get_otaurl();
   console_get_otaauth();

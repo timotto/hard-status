@@ -94,6 +94,10 @@ void webserver_handle_status() {
   snprintf(pulseStr, sizeof(pulseStr), "%d", config.pulseFrequency);
   root["pulse"] = pulseStr;
   
+  char flipStr[16];
+  snprintf(flipStr, sizeof(flipStr), "%d", config.colorFlipRatio);
+  root["flip"] = flipStr;
+  
   String json;
   root.printTo(json);
   server.send ( 200, "application/json", json );
@@ -156,6 +160,11 @@ void webserver_handle_save() {
   if (root.containsKey("pulse")) {
     int32_t n = atoi(root["pulse"]);
     if (n >= 10 && n <= 10000) config.pulseFrequency = n;
+  }
+
+  if (root.containsKey("flip")) {
+    uint16_t n = atoi(root["flip"]);
+    if (n > 0 && n <= 10000) config.pulseFrequency = n;
   }
 
   config_load_defaults();

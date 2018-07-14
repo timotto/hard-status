@@ -67,6 +67,7 @@ void config_load_defaults() {
   if (config.otaCheckDelay < 1) config.otaCheckDelay = 300;
   if (config.pulseFrequency < 1) config.pulseFrequency = 100;
   if (config.pulseFrequency > 10000) config.pulseFrequency = 100;
+  if (config.colorFlipRatio <= 0 || config.colorFlipRatio > 10000) config.colorFlipRatio = 5000;
 
   DEBUG("Config: load defaults: complete");
 }
