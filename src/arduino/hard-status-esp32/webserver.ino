@@ -164,7 +164,7 @@ void webserver_handle_save() {
 
   if (root.containsKey("flip")) {
     uint16_t n = atoi(root["flip"]);
-    if (n > 0 && n <= 10000) config.pulseFrequency = n;
+    if (n > 0 && n <= 10000) config.colorFlipRatio = n;
   }
 
   config_load_defaults();
