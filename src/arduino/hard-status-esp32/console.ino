@@ -70,7 +70,6 @@ void console_set() {
   config_load_defaults();
   config_save_sync();
   led_update_brightness();
-  led_reset_pulseFrequency();
   setup_api_request();
   setup_ota_request();
 

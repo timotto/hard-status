@@ -18,23 +18,24 @@
 PixelColor_t red = CRGB::Red;
 PixelColor_t orange = CRGB(255, 165, 0);
 PixelColor_t green = CRGB::Green;
+PixelColor_t greenish = CRGB(0, 63, 15);
 PixelColor_t yellow = CRGB::Yellow;
 PixelColor_t blue = CRGB(0, 0, 127);
 PixelColor_t white = CRGB(127,127,127);
 PixelColor_t grey = CRGB(63, 63, 63);
-PixelColor_t black_ok = CRGB(0, 0, 0);
-PixelColor_t black_disconnected = CRGB(40, 20, 0);
-PixelColor_t brown = CRGB(31, 31, 11);
-PixelColor_t bluish = CRGB(0, 11, 63);
-PixelColor_t black = black_disconnected;
+PixelColor_t black = CRGB(0, 0, 0);
+//PixelColor_t brown = CRGB(31, 31, 11);
+PixelColor_t purple = CRGB(0x99, 0, 0xcc);
+PixelColor_t purple_hard = CRGB(0xff, 0, 0xff);
+PixelColor_t bluish = CRGB(0, 15, 63);
 
-PixelColor_t led_initialColors[2] = {black,green};
+PixelColor_t led_initialColors[2] = {black, bluish};
 int led_initialFactor = 10;
 int led_initialDirection = 0;
 
 #define FASTLED_SHOW_CORE 1
 
-#define BRIGHTNESS          60
+#define BRIGHTNESS          10
 #define FRAMES_PER_SECOND  120
 
 #define LED_TYPE    WS2812
@@ -46,7 +47,8 @@ CRGB leds_buffer[LED_PIXEL_COUNT];
 struct animation_state_t
 {
   CRGB colors[2];
-  uint16_t time;
+  CRGB colorsBuffer[2];
+  float randomFactor;
   int8_t direction;
 };
 
@@ -81,21 +83,32 @@ void led_update_brightness() {
   FastLED.setBrightness(config.brightness);
 }
 
+uint16_t _led_animation_time(uint32_t pixel) {
+  
+  const float a = led_animation_state[pixel].colorsBuffer[0] == led_initialColors[0] ? 10.0 : 1.0;
+  const float b = (float)config.pulseFrequency;
+  const float c = dynamicPulseRatio;
+  const float d = led_animation_state[pixel].randomFactor;
+
+  const float x = a * b * c * d;
+  const uint16_t z = (uint16_t) x;
+
+//  Serial.printf("z=%d a=%.1f b=%.1f c=%.1f d=%.1f x=%.1f\n", z, a, b, c, d, x);
+  
+  return z;
+}
+
 void led_set_color(int pixel, PixelColor_t from, PixelColor_t to) {
   if (led_animation_state[pixel].colors[0] == to && led_animation_state[pixel].colors[1] == from) return;
   
-  const int factor = to == black ? 10 : 1;
-
   led_animation_state[pixel].colors[0] = to;
   led_animation_state[pixel].colors[1] = from;
-  led_animation_state[pixel].time = random(1 * factor * config.pulseFrequency, 4 * factor * config.pulseFrequency);
+  led_animation_state[pixel].randomFactor = (float)random(10000, 40000) / 10000.0;
 }
 
-void led_reset_pulseFrequency() {
-  for(int pixel=0; pixel<LED_PIXEL_COUNT;pixel++) {
-    const int factor = led_animation_state[pixel].colors[0] == black ? 10 : 1;
-    led_animation_state[pixel].time = random(1 * factor * config.pulseFrequency, 4 * factor * config.pulseFrequency);
-  }
+void led_set_idle(int pixel, bool trueIsGoodFalseIsBad) {
+  PixelColor_t c = trueIsGoodFalseIsBad ? green : red;
+  led_set_color(pixel, c, black);
 }
 
 PixelColor_t codeToColor(char code) {
@@ -104,9 +117,9 @@ PixelColor_t codeToColor(char code) {
     case 'u': return grey;
     case 's': return yellow;
     case '+': return green;
-    case 'e': return orange;
+    case 'e': return purple_hard;
     case '-': return red;
-    case 'a': return brown;
+    case 'a': return purple;
     case 'p': return bluish;
     default : return black;
   }
@@ -162,37 +175,31 @@ void led_show_ota() {
   setupAnimations();
 }
 
-void led_show_default(bool trueIsGoodFalseIsBad) {
-  PixelColor_t c = trueIsGoodFalseIsBad ? green : red;
-  for (uint16_t i = 0; i < LED_PIXEL_COUNT; i++) {
-    led_animation_state[i].colors[1] = c;
-    led_animation_state[i].colors[0] = black;
-  }
-}
-
 void led_show_wifi() {
-  PixelColor_t next;
+  PixelColor_t c;
   switch(wifiState) {
     case WL_CONNECTED:
-      next = black_ok;
+      c = bluish;
       break;
     default:
-      next = black_disconnected;
+      c = yellow;
       break;
   }
+  
   for (uint16_t i = 0; i < LED_PIXEL_COUNT; i++) {
-    if(led_animation_state[i].colors[0] == black) led_animation_state[i].colors[0] = next;
+    led_set_color(i, c, black);
   }
-  black = next;
 }
 
 void setupAnimations() {
   for (uint16_t i = 0; i < LED_PIXEL_COUNT; i++) {
     led_animation_state[i].colors[0] = led_initialColors[0];
+    led_animation_state[i].colorsBuffer[0] = led_initialColors[0];
     led_animation_state[i].colors[1] = led_initialColors[1];
+    led_animation_state[i].colorsBuffer[1] = led_initialColors[1];
     led_animation_state[i].direction = led_initialDirection;
-    led_animation_state[i].time = random(1 * led_initialFactor * config.pulseFrequency, 4 * led_initialFactor * config.pulseFrequency);
-    animations.StartAnimation(i, led_animation_state[i].time, animationHandler);
+    led_animation_state[i].randomFactor = (float)random(10000, 40000) / 10000.0;
+    animations.StartAnimation(i, _led_animation_time(i), animationHandler);
   }
 }
 
@@ -200,15 +207,20 @@ void restartFinishedAnimations() {
   for(int i=0;i<LED_PIXEL_COUNT;i++) {
     if (animations.IsAnimationActive(i)) continue;
     
-    led_animation_state[i].direction = 1 - led_animation_state[i].direction;
-    animations.StartAnimation(i, led_animation_state[i].time, animationHandler);
+    // only change color which is currently at 0%
+    uint8_t d = led_animation_state[i].direction;
+    if (led_animation_state[i].colorsBuffer[d] != led_animation_state[i].colors[d]) {
+      led_animation_state[i].colorsBuffer[d] = led_animation_state[i].colors[d];
+    }
+    led_animation_state[i].direction = 1 - d;
+    animations.StartAnimation(i, _led_animation_time(i), animationHandler);
   }
 }
 
 void animationHandler(const AnimationParam& param) {
     AnimEaseFunction easing = easings[led_animation_state[param.index].direction];
-    PixelColor_t from = led_animation_state[param.index].colors[led_animation_state[param.index].direction];
-    PixelColor_t to = led_animation_state[param.index].colors[1 - led_animation_state[param.index].direction];
+    PixelColor_t from = led_animation_state[param.index].colorsBuffer[led_animation_state[param.index].direction];
+    PixelColor_t to = led_animation_state[param.index].colorsBuffer[1 - led_animation_state[param.index].direction];
 
     const float progress = easing(param.progress);
     const float progressInv = 1.0 - progress;

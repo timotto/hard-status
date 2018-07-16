@@ -90,6 +90,7 @@ void wifi_handle_state_change(const uint8_t newState) {
     case WL_CONNECTED:
       DEBUG("WiFi: connected");
       wifiHotspotLastUsed = millis();
+      api_trigger_request();
       break;
       
     case WL_DISCONNECTED:

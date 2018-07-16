@@ -33,6 +33,9 @@ char apiId[32];
 uint8_t otaState = OTA_STATE_IDLE;
 uint8_t wifiState = WL_NO_SHIELD;
 
+// 1.0 = no active build .. 0.1 = all jobs active
+float dynamicPulseRatio = 1.0;
+
 void second_core_task( void * pvParameters) {
   setup_async();
   while(true) loop_async();

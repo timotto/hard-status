@@ -217,6 +217,7 @@ void loop_ota_async() {
   
   WiFiClientSecure client;
 
+  DEBUG("OTA: pull: connecting");
   if (!client.connect(ota_host, ota_port)) {
     DEBUG("OTA: pull: error: HTTPS connect failed");
     otaState = OTA_STATE_ERROR;
