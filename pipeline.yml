@@ -335,6 +335,8 @@ jobs:
         skip_download: true
     - get: arduino-release
       trigger: true
+      params:
+        include_source_tarball: true
     - get: arduino-docker-source
       trigger: true
   - task: prepare-docker-build
