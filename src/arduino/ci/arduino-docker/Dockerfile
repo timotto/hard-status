@@ -13,8 +13,8 @@ ARG version
 
 ADD arduino-release /arduino-release
 # TODO sha512 check
-RUN xzcat arduino-release/Arduino-${version}.tar.xz | tar x && \
-    cd Arduino-${version}/build && \
+RUN tar zxf arduino-release/source.tar.gz && \
+    cd arduino-Arduino-*/build && \
     ant && \
     ant test && \
     echo "$version" | ant dist && \

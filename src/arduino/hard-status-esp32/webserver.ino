@@ -90,6 +90,14 @@ void webserver_handle_status() {
   snprintf(otaDelayStr, sizeof(otaDelayStr), "%d", config.otaCheckDelay);
   root["otadelay"] = otaDelayStr;
   
+  char pulseStr[16];
+  snprintf(pulseStr, sizeof(pulseStr), "%d", config.pulseFrequency);
+  root["pulse"] = pulseStr;
+  
+  char flipStr[16];
+  snprintf(flipStr, sizeof(flipStr), "%d", config.colorFlipRatio);
+  root["flip"] = flipStr;
+  
   String json;
   root.printTo(json);
   server.send ( 200, "application/json", json );
@@ -131,7 +139,11 @@ void webserver_handle_save() {
     needReboot = true;
   }
 
-  if (root.containsKey("api") && url_verify(root["api"].as<char*>())) strncpy(config.apiUrl, root["api"].as<char*>(), sizeof(config.apiUrl));
+  if (root.containsKey("api") && url_verify(root["api"].as<char*>())) {
+    DEBUGf("strncpy(config.apiUrl, JSON, %d): [%s]\n", sizeof(config.apiUrl), config.apiUrl);
+    strncpy(config.apiUrl, root["api"].as<char*>(), sizeof(config.apiUrl));
+  }
+//  if (root.containsKey("api") && url_verify(root["api"].as<char*>())) strncpy(config.apiUrl, root["api"].as<char*>(), sizeof(config.apiUrl));
   if (root.containsKey("ota") && url_verify(root["ota"].as<char*>())) strncpy(config.otaUrl, root["ota"].as<char*>(), sizeof(config.otaUrl));
   if (root.containsKey("otaauth")) strncpy(config.otaAuth, root["otaauth"].as<char*>(), sizeof(config.otaAuth));
 
@@ -143,6 +155,16 @@ void webserver_handle_save() {
   if (root.containsKey("otadelay")) {
     int32_t n = atoi(root["otadelay"]);
     if (n > 0 && n < 65536) config.otaCheckDelay = n;
+  }
+
+  if (root.containsKey("pulse")) {
+    int32_t n = atoi(root["pulse"]);
+    if (n >= 10 && n <= 10000) config.pulseFrequency = n;
+  }
+
+  if (root.containsKey("flip")) {
+    uint16_t n = atoi(root["flip"]);
+    if (n > 0 && n <= 10000) config.colorFlipRatio = n;
   }
 
   config_load_defaults();

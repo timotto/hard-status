@@ -13,6 +13,8 @@ char api_host[512];
 int api_port;
 bool api_https;
 
+static uint32_t nextApiCall = 0;
+
 void setup_api() {
   Serial.println("API: setup: started");
   setup_api_request();
@@ -29,44 +31,96 @@ void loop_api() {
   if(otaState != OTA_STATE_IDLE) return;
   if (!api_setup_ok) return;
   
-  static uint32_t nextApiCall = 0;
   const uint32_t now = millis();
   if (now < nextApiCall) return;
   nextApiCall = now + (1000 * config.apiCheckDelay);
-  
+
   WiFiClientSecure client;
+  DEBUG("API: connecting");
   if (!client.connect(api_host, api_port)) {
     DEBUG("API: https connect failed");
     return;
   }
 
   client.print(api_request);
+  bool status200Ok = false;
   while (client.connected()) {
     String line = client.readStringUntil('\n');
+    if (line.startsWith("HTTP/1.0 200 OK")) {
+      status200Ok = true;
+    }
+      
     if (line == "\r") {
       break;
     }
   }
   String line = client.readStringUntil('\n');
   
-  if(otaState != OTA_STATE_IDLE) return;
+  if(otaState != OTA_STATE_IDLE) {
+    DEBUG("API: abort: OTA active");
+    return;
+  }
+  if(!status200Ok) {
+    DEBUG("API: abort: status not OK");
+    return;
+  }
 
   int n = line.length();
-  if (n <= 0 || n % 2 != 0) return;
+  if (n <= 0 || n % 2 != 0) {
+    DEBUG("API: abort: odd response");
+    return;
+  }
   
   int offset = 0;
-  while(offset < LED_PIXEL_COUNT) {
-    for(int i=0;i<line.length();i+=2) {
-      const int led = offset + (i / 2);
-      if (led >= LED_PIXEL_COUNT) continue;
-      led_set_color(
-        led, 
-        codeToColor(line.charAt(i)), 
-        codeToColor(line.charAt(i+1)));
+  int pixels = n /2;
+
+  uint32_t good = 0;
+  uint32_t bad = 0;
+  uint32_t unknown = 0;
+  uint32_t active = 0;
+  offset = 0;
+  while(offset < LED_PIXEL_COUNT && offset < pixels) {
+    const char c0 = line.charAt(offset*2);
+    const char c1 = line.charAt(offset*2+1);
+    switch(c0) {
+      case '+': good++; break;
+      case '-': 
+      case 'a': 
+      case 'e': bad++; break;
+      default: unknown++; break;
     }
-    offset += n/2;
+    switch(c1) {
+      case ' ': break;
+      default: active++; break;
+    }
+    offset++;
+  }
+  uint32_t ratio = (good + bad) == 0 ? 5000 : 10000.0 * good / (good + bad);
+  const bool ratioGood = ratio >= config.colorFlipRatio;
+
+  // 10 is no change, 1 is faster, 100 is even slower
+  const float f = (good + bad + unknown) == 0 ? 1.0 : 
+      active == 0 ? 1.0 :
+        1.0 / (10.0 * (float)active / (float)(good + bad + unknown) );
+  dynamicPulseRatio = f < 0.1 ? 0.1 : f > 1.0 ? 1.0 : f;
+  
+  offset = 0;
+  while(offset < LED_PIXEL_COUNT && offset < pixels) {
+    const char c0 = line.charAt(offset*2);
+    const char c1 = line.charAt(offset*2+1);
+    led_set_color(
+      offset, 
+      codeToColor(c0), 
+      codeToColor(c1));
+    offset++;
+  }
+  while(offset < LED_PIXEL_COUNT) {
+    led_set_idle(offset, ratioGood);
+    offset++;
   }
   nextApiCall = millis() + (1000 * config.apiCheckDelay);
+
+  DEBUG("API: done");
 }
 
 void setup_api_request() {
@@ -97,6 +151,11 @@ void setup_api_request() {
     converted.query_string==NULL?"":"?", 
     converted.query_string==NULL?"":converted.query_string, 
     converted.host, apiId);
+  DEBUGf("API: setup: request:\n---SNIP---\n%s---SNAP---\n", api_request);
   api_setup_ok = true;
+}
+
+void api_trigger_request() {
+  nextApiCall = 0;
 }
 

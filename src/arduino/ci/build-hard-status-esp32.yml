@@ -7,6 +7,7 @@ inputs:
 - name: arduinojson-library-source
 - name: libyuarel-library-source
 - name: fastled-library-source
+- name: readline-library-source
 - name: html
 - name: defaults
 - name: hardware

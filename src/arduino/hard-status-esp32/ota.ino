@@ -22,17 +22,22 @@ int ota_port;
 bool ota_https;
 char ota_request[512];
 char ota_last_modified[64];
-bool ota_setup_ok = false;
-
 int otaContentLength = 0;
 
 // Utility to extract header value from headers
 String getHeaderValue(String header, String headerName);
 
 uint32_t otaPushNextPrint = 0;
-// called from sketch setup_sync()
-void setup_ota_sync() {
-  DEBUG("OTA: setup: push: started");
+
+void setup_ota() {
+  DEBUG("OTA: setup: started");
+  setup_ota_push();
+  setup_ota_lastModified();
+  setup_ota_request();
+  DEBUG("OTA: setup: complete");
+}
+
+void setup_ota_push() {
   ArduinoOTA
     .onStart([]() {
       otaState = OTA_STATE_PUSH;
@@ -50,10 +55,10 @@ void setup_ota_sync() {
       Serial.println("OTA: push: end");
     })
     .onProgress([](unsigned int progress, unsigned int total) {
-      loop_led();
       if (millis() < otaPushNextPrint) return;
-      otaPushNextPrint = millis() + 1000;
+      otaPushNextPrint = millis() + 100;
       Serial.printf("OTA: push: progress: %u%%\n", (progress / (total / 100)));
+      led_show_progress(black, blue, progress, total);
     })
     .onError([](ota_error_t error) {
       Serial.printf("OTA: push: error[%u]: ", error);
@@ -65,38 +70,28 @@ void setup_ota_sync() {
       otaState = OTA_STATE_IDLE;
     });
   ArduinoOTA.begin();
-  DEBUG("OTA: setup: push: complete");
-}
-
-// called from sketch setup_async()
-void setup_ota_async() {
-  DEBUG("OTA: setup: pull: started");
-  setup_ota_lastModified();
-  setup_ota_request();
-  DEBUG("OTA: setup: pull: complete");
 }
 
 void setup_ota_lastModified() {
   strncpy(ota_last_modified, "", sizeof(ota_last_modified));
-  int firmwareDateFile = async_fs_open("/firmware.date", FILE_READ);
-  if (firmwareDateFile < 0) {
+  File firmwareDateFile = SPIFFS.open("/firmware.date", FILE_READ);
+  if (!firmwareDateFile) {
     DEBUG("OTA: setup: pull: cannot open /firmware.date");
     return;
   }
   
   char tmp[bufferLength];
-  int len = async_fs_read(firmwareDateFile, (uint8_t*)tmp, bufferLength - 1);
+  int len = firmwareDateFile.read((uint8_t*)tmp, bufferLength - 1);
   tmp[len++] = 0;
 
   if (strlen(tmp) == 0) return;
   
   sprintf(ota_last_modified, "If-Modified-Since: %s\n", tmp);
-  async_fs_close(firmwareDateFile);
+  firmwareDateFile.close();
   DEBUGf("OTA: setup: pull: have firmware date: [%s] (%d)\n", tmp, strlen(tmp));
 }
 
 void setup_ota_request() {
-  ota_setup_ok = false;
   struct url_parser_url_t parsed;
   struct wifi_client_url_t converted;
   parse_url(config.otaUrl, &parsed);
@@ -131,10 +126,8 @@ void setup_ota_request() {
     auth ? config.otaAuth : "", 
     auth ? "\r\n" : "",
     ota_last_modified);
-  ota_setup_ok = true;
 }
 
-// called from sketch loop()
 void loop_ota_sync() {
   ArduinoOTA.handle();
   switch(otaState) {
@@ -159,10 +152,16 @@ void loop_ota_sync() {
     int written = 0;
     int total = file.size();
     while(total > written) {
-      loop_led();
       pos = file.read(buffer, 512);
       wrx = Update.write(buffer, pos);
       written += wrx;
+
+      if (millis() >= otaPushNextPrint) {;
+        otaPushNextPrint = millis() + 100;
+        Serial.printf("OTA: sync: progress: %u%%\n", (written / (total / 100)));
+        led_show_progress(black, green, total + written, total + total);
+      }
+
       if (pos != wrx) {
         Serial.printf("OTA: Failed to write all bytes, had %d but wrote only %d\n", pos, wrx);
         return;
@@ -177,7 +176,8 @@ void loop_ota_sync() {
           SPIFFS.remove("/firmware.date");
           SPIFFS.rename("/ota.date", "/firmware.date");
           SPIFFS.remove("/ota.bin");
-          ESP.restart();
+          led_show_ota();
+          otaState = OTA_STATE_REBOOT;
           return;
         } else Serial.println("Update not finished? Something went wrong!");
       } else Serial.println("Error Occurred. Error #: " + String(Update.getError()));
@@ -186,7 +186,11 @@ void loop_ota_sync() {
   otaState = OTA_STATE_ERROR;
 }
 
-// called from sketch loop_async()
+void loop_ota_reboot() {
+  if (otaState == OTA_STATE_REBOOT)
+    ESP.restart();
+}
+
 void loop_ota_async() {
   switch(wifiState) {
     case WL_CONNECTED:
@@ -205,7 +209,6 @@ void loop_ota_async() {
     default:
       return;
   }
-  if (!ota_setup_ok) return;
   
   static uint32_t nextOtaCall = 0;
   const uint32_t now = millis();
@@ -214,6 +217,7 @@ void loop_ota_async() {
   
   WiFiClientSecure client;
 
+  DEBUG("OTA: pull: connecting");
   if (!client.connect(ota_host, ota_port)) {
     DEBUG("OTA: pull: error: HTTPS connect failed");
     otaState = OTA_STATE_ERROR;
@@ -253,8 +257,8 @@ void loop_ota_async() {
   }
   uint8_t buffer[bufferLength];
   int bufferPos = 0;
-  int otaDataFile = async_fs_open("/ota.bin", FILE_WRITE);
-  if (otaDataFile < 0) {
+  File otaDataFile = SPIFFS.open("/ota.bin", FILE_WRITE);
+  if (!otaDataFile) {
     DEBUG("OTA: pull: error: failed to create /ota.bin file");
     otaState = OTA_STATE_ERROR;
     return;
@@ -274,28 +278,35 @@ void loop_ota_async() {
         Serial.printf("OTA: pull: download progress: %d bytes\n", total);
         nextTime = millis() + 1000;
       }
-      if(0 > async_fs_write(otaDataFile, buffer, bufferPos)) {
+      if (millis() >= otaPushNextPrint) {;
+        otaPushNextPrint = millis() + 100;
+        Serial.printf("OTA: sync: download: %u%%\n", (total / (otaContentLength / 100)));
+        led_show_progress(black, green, total, otaContentLength + otaContentLength);
+      }
+      if(0 > otaDataFile.write(buffer, bufferPos)) {
         wfail++;
       } else wok++;
     }
   }
   Serial.printf("OTA: pull: download result: %d bytes (%.2fkB/s), writes: %d OK, %d failed\n", 
     total, (total * 1.024) / (millis() - tstart), wok, wfail);
-  async_fs_close(otaDataFile);
+  otaDataFile.flush();
+  otaDataFile.close();
   if (wfail > 0) {
     DEBUG("OTA: pull: error: download incomplete");
     otaState = OTA_STATE_ERROR;
     return;
   }
 
-  int otaDateFile = async_fs_open("/ota.date", FILE_WRITE);
-  if (otaDateFile < 0) {
+  File otaDateFile = SPIFFS.open("/ota.date", FILE_WRITE);
+  if (!otaDateFile) {
     DEBUG("OTA: pull: error: failed to create /ota.date file");
     otaState = OTA_STATE_ERROR;
     return;
   }
-  async_fs_write(otaDateFile, (uint8_t*)(lastModified.c_str()), lastModified.length()+1);
-  async_fs_close(otaDateFile);
+  otaDateFile.write((uint8_t*)(lastModified.c_str()), lastModified.length()+1);
+  otaDateFile.flush();
+  otaDateFile.close();
 
   // TODO load signature & verify
   DEBUG("OTA: pull: download complete");

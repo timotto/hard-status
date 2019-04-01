@@ -1,11 +1,14 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#include "FastLED.h"
+typedef CRGB PixelColor_t;
+
+// the sketch started out with NeoPixelBus, now only uses animation from that library
+#include <NeoPixelAnimator.h>
+
 #include <WiFi.h>
 #include <ArduinoJson.h>
-#include <NeoPixelBus.h>
-#include <NeoPixelBrightnessBus.h>
-#include <NeoPixelAnimator.h>
 #include <FS.h>
 #include <SPIFFS.h>
 
@@ -18,6 +21,7 @@
 #define OTA_STATE_PUSH  1
 #define OTA_STATE_LOAD  2
 #define OTA_STATE_FLASH 3
+#define OTA_STATE_REBOOT 4
 #define OTA_STATE_ERROR 9
 
 // if changed will trigger reset of config
@@ -51,6 +55,8 @@ typedef struct config_t {
   char otaAuth[256];
   uint16_t apiCheckDelay;
   uint16_t otaCheckDelay;
+  uint16_t pulseFrequency;
+  uint16_t colorFlipRatio;
 } config_t;
 
 // output from the borrowed url_parser code

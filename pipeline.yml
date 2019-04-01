@@ -335,6 +335,8 @@ jobs:
         skip_download: true
     - get: arduino-release
       trigger: true
+      params:
+        include_source_tarball: true
     - get: arduino-docker-source
       trigger: true
   - task: prepare-docker-build
@@ -436,6 +438,8 @@ jobs:
       trigger: true
       passed: [libyuarel-test]
     - get: fastled-library-source
+      trigger: true
+    - get: readline-library-source
       trigger: true
   - task: html
     file: arduino-ci/src/arduino/ci/build-html.yml
@@ -766,6 +770,11 @@ resources:
   type: git
   source:
     uri: https://github.com/FastLED/FastLED.git
+
+- name: readline-library-source
+  type: git
+  source:
+    uri: https://github.com/timotto/Readline.git
 
 - name: 3d-source
   type: git
