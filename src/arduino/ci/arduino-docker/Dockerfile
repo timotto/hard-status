@@ -5,7 +5,7 @@ ARG version
 RUN [ -n "$version" ]
 
 RUN apt-get update && \
-    apt-get install -y git make gcc ant openjdk-8-jdk xz-utils unzip bzip2
+    apt-get install -y git make gcc ant openjdk-8-jdk openjfx xz-utils unzip bzip2
 
 FROM base AS build
 
