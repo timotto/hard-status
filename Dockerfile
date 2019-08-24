@@ -4,11 +4,11 @@ ADD . /build
 
 WORKDIR /build
 
-RUN yarn install && \
-    yarn run test && \
-    yarn run tsc && \
+RUN npm install && \
+    npm run test && \
+    npm run tsc && \
     rm -rf node_modules/ && \
-    yarn install --production=true
+    npm install --production
 
 FROM node:8-alpine AS runtime
 

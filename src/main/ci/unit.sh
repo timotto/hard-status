@@ -2,5 +2,5 @@
 
 set -e
 
-yarn
-yarn run test
+npm install
+npm run test
