@@ -4,6 +4,8 @@ metadata:
   name: hard-status-ingress
   labels:
     app: hard-status
+  annotations:
+    kubernetes.io/tls-acme: "true"
 spec:
   rules:
   - host: {{ .Values.ingressHostname }}
