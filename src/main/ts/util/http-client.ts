@@ -12,13 +12,13 @@ export class HttpClient {
     public get(url: string|any): Promise<any> {
         return this.redis.getOrFetch<any>(url,
             this.cacheTime,
-            () => rp.get(url),
+            () => rp.get(url).promise(),
             JSON.parse);
     }
     public head(url: string|any): Promise<any> {
         return this.redis.getOrFetch<any>(url,
             this.cacheTime,
-            () => rp.head(url),
+            () => rp.head(url).promise(),
             JSON.parse);
     }
 }

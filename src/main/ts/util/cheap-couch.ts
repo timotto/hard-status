@@ -18,7 +18,7 @@ export class CheapCouch {
             uri: this.documentBaseUrl,
             simple: true,
             resolveWithFullResponse: false,
-            json: {_id: documentId}});
+            json: {_id: documentId}}).promise();
     }
 
     public loadOrCreate(documentId: string): Promise<any> {

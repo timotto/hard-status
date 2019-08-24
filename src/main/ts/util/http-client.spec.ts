@@ -26,7 +26,7 @@ describe('Class: HttpClient', () => {
         it('calls RequestPromiseNative.get(url) and returns the result', async () => {
             const expectedResult = 'expected result';
             spyOn(rp, 'get')
-                .and.returnValue(Promise.resolve(expectedResult));
+                .and.returnValue({promise: () => Promise.resolve(expectedResult)});
 
             // given
             const givenUrl = 'something';
@@ -44,7 +44,7 @@ describe('Class: HttpClient', () => {
         it('calls RequestPromiseNative.head(url) and returns the result', async () => {
             const expectedResult = 'expected result';
             spyOn(rp, 'head')
-                .and.returnValue(Promise.resolve(expectedResult));
+                .and.returnValue({promise: () => Promise.resolve(expectedResult)});
 
             // given
             const givenUrl = 'something';
