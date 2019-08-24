@@ -1,4 +1,4 @@
-FROM debian:latest AS base
+FROM debian:stretch AS base
 
 ARG version
 
