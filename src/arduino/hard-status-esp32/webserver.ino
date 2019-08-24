@@ -49,16 +49,16 @@ bool webserver_auth() {
   return true;
 }
 
-void nestObject(JsonObject& root, char* key, char* login, char* password) {
-  JsonObject& cred = root.createNestedObject(key);
+void nestObject(JsonObject root, char* key, char* login, char* password) {
+  JsonObject cred = root.createNestedObject(key);
   cred["login"] = login;
   cred["password"] = "unchanged";
 }
 
 void webserver_handle_status() {
   WEB_AUTH;
-  StaticJsonBuffer<1024> jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
+  StaticJsonDocument<1024> jsonBuffer;
+  JsonObject root = jsonBuffer.createNestedObject();
   
   root["name"] = config.name;
   
@@ -70,9 +70,9 @@ void webserver_handle_status() {
   
   nestObject(root, "webserver", config.webserver.login, config.webserver.password);
   
-  JsonArray& wifi = root.createNestedArray("wifi");
+  JsonArray wifi = root.createNestedArray("wifi");
   for(int i=0; i<MAX_USER_WIFI; i++) {
-    JsonObject& cred = jsonBuffer.createObject();
+    JsonObject cred = jsonBuffer.createNestedObject();
     cred["login"] = config.wifi[i].login;
     cred["password"] = "unchanged";
     wifi.add(cred);
@@ -99,7 +99,7 @@ void webserver_handle_status() {
   root["flip"] = flipStr;
   
   String json;
-  root.printTo(json);
+  serializeJson(root, json);
   server.send ( 200, "application/json", json );
 }
 
@@ -108,8 +108,9 @@ void webserver_handle_save() {
   WEB_AUTH;
 
   bool needReboot = false;
-  DynamicJsonBuffer jsonBuffer(1024);
-  JsonObject& root = jsonBuffer.parse(server.arg("plain"));
+  DynamicJsonDocument jsonBuffer(1024);
+  deserializeJson(jsonBuffer, server.arg("plain"));
+  JsonObject root = jsonBuffer.as<JsonObject>();
   
   if (root.containsKey("name")) {
     needReboot = strcmp(config.name, root["name"].as<char*>()) != 0;
@@ -123,9 +124,9 @@ void webserver_handle_save() {
 
   int updatedWifis = 0;
   if (root.containsKey("wifi")) {
-    JsonArray& wifi = root["wifi"];
+    JsonArray wifi = root["wifi"];
     int i=0;
-    for (JsonObject& value : wifi) {
+    for (JsonObject value : wifi) {
       if (updatedWifis >=MAX_USER_WIFI) break;
       if(saveCred(&(config.wifi[i++]), value)) {
         updatedWifis++;
@@ -183,7 +184,7 @@ void webserver_handle_save() {
   }
 }
 
-bool saveCred(struct config_credential_t* cred, JsonObject& root) {
+bool saveCred(struct config_credential_t* cred, JsonObject root) {
   if (!root.containsKey("login")) return false;
   if (!root.containsKey("password")) return false;
 
@@ -223,5 +224,3 @@ void webserver_handle_not_found() {
 
   server.send ( 404, "text/plain", message );
 }
-
-
