@@ -128,6 +128,7 @@ jobs:
     file: source-code/src/main/ci/create-chart.yml
     params:
       version: ((chartVersion))
+      VALUES_YAML: ((it.values_yaml))
   - do:
     - put: helm-cloud-it
       params:
@@ -272,6 +273,7 @@ jobs:
     file: source-code/src/main/ci/create-chart.yml
     params:
       version: ((chartVersion))
+      VALUES_YAML: ((prod.values_yaml))
   - put: helm-cloud
     params:
       chart: chart/hard-status-((chartVersion)).tgz
@@ -305,6 +307,7 @@ jobs:
     file: source-code/src/main/ci/create-chart.yml
     params:
       version: ((chartVersion))
+      VALUES_YAML: ((rpi.values_yaml))
   - put: helm-rpi
     params:
       chart: chart/hard-status-((chartVersion)).tgz
@@ -475,7 +478,7 @@ jobs:
           hardware: hardware-64
       - put: lolin32-firmware-64
         params:
-          path: lolin32-firmware-build-64/hard-status-esp32-lolin32.bin
+          file: lolin32-firmware-build-64/hard-status-esp32-lolin32.bin
     - do:
       - aggregate:
         - task: defaults
@@ -507,7 +510,7 @@ jobs:
           hardware: hardware-256
       - put: lolin32-firmware-256
         params:
-          path: lolin32-firmware-build-256/hard-status-esp32-lolin32.bin
+          file: lolin32-firmware-build-256/hard-status-esp32-lolin32.bin
     - do:
       - aggregate:
         - task: defaults
@@ -516,30 +519,30 @@ jobs:
             DEFAULT_NAME: ((firmware.default.name))
             DEFAULT_PASSWORD: ((firmware.default.password))
             DEFAULT_API_URL: https://((ingressHostname))/concourse?url=((concourse-url))
-            DEFAULT_OTA_URL: ((firmware.url.leds384))
+            DEFAULT_OTA_URL: ((firmware.url.leds1024))
             DEFAULT_OTA_AUTH: ((firmware.default.ota_auth))
             DEFAULT_WIFI0_SSID: ((firmware.default.wifi0_ssid))
             DEFAULT_WIFI0_PSK: ((firmware.default.wifi0_psk))
           output_mapping:
-            defaults: defaults-384
+            defaults: defaults-1024
         - task: hardware
           file: arduino-ci/src/arduino/ci/build-hardware.yml
           params:
-            LED_COUNT: 384
+            LED_COUNT: 1024
             LED_PIN: 5
           output_mapping:
-            hardware: hardware-384
-      - task: build-384
+            hardware: hardware-1024
+      - task: build-1024
         image: arduino-esp32-docker-image
         file: arduino-ci/src/arduino/ci/build-hard-status-esp32.yml
         output_mapping:
-          lolin32-firmware-build: lolin32-firmware-build-384
+          lolin32-firmware-build: lolin32-firmware-build-1024
         input_mapping:
-          defaults: defaults-384
-          hardware: hardware-384
-      - put: lolin32-firmware-384
+          defaults: defaults-1024
+          hardware: hardware-1024
+      - put: lolin32-firmware-1024
         params:
-          path: lolin32-firmware-build-384/hard-status-esp32-lolin32.bin
+          file: lolin32-firmware-build-1024/hard-status-esp32-lolin32.bin
 
 - name: diffusor
   plan:
@@ -573,6 +576,11 @@ jobs:
       NAME: cube
       LAYER_HEIGHT: 0.35
 
+project-source: &project-source
+  uri: ((git.uri))
+  branch: ((git.branch))
+  private_key: ((github.private_key))
+
 resources:
 - name: source-code
   type: git
@@ -600,23 +608,23 @@ resources:
   type: docker-image
   source:
     repository: ((project-registry))/((backend-image-name))
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub.username))
+    password: ((dockerhub.password))
 
 - name: release-arm
   type: remote-docker-image
   source:
     repository: ((project-registry))/((arm-backend-image-name))
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub.username))
+    password: ((dockerhub.password))
     dockerd: ((dockerd))
 
 - name: release-arm-plain
   type: docker-image
   source:
     repository: ((project-registry))/((arm-backend-image-name))
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub.username))
+    password: ((dockerhub.password))
 
 - name: redis-runtime
   type: docker-image
@@ -630,19 +638,40 @@ resources:
     uri: ((git.uri))
     branch: version
     file: version
-    private_key: ((git.private_key))
+    private_key: ((github.private_key))
 
 - name: helm-cloud
   type: helm
-  source: ((cluster1))
+  source:
+    admin_cert: ((helm-cloud.admin_cert))
+    admin_key: ((helm-cloud.admin_key))
+    cluster_ca: ((helm-cloud.cluster_ca))
+    cluster_url: ((helm-cloud.cluster_url))
+    namespace: hard-status
+    release: hard-status
+    secret_name: my-registry
 
 - name: helm-cloud-it
   type: helm
-  source: ((cluster1it))
+  source:
+    admin_cert: ((helm-cloud.admin_cert))
+    admin_key: ((helm-cloud.admin_key))
+    cluster_ca: ((helm-cloud.cluster_ca))
+    cluster_url: ((helm-cloud.cluster_url))
+    namespace: hard-status-it
+    release: hard-status-it
+    secret_name: my-registry
 
 - name: helm-rpi
   type: helm
-  source: ((cluster2))
+  source:
+    admin_cert: ((helm-rpi.admin_cert))
+    admin_key: ((helm-rpi.admin_key))
+    cluster_ca: ((helm-rpi.cluster_ca))
+    cluster_url: ((helm-rpi.cluster_url))
+    namespace: hard-status
+    release: hard-status
+    secret_name: my-registry
 
 - name: hard-status-esp32-source
   type: git
@@ -687,41 +716,44 @@ resources:
     - src/arduino/ci/prepare-arduino-esp32-docker.yml
 
 - name: lolin32-firmware-64
-  type: curl
+  type: s3
   source:
-    method: PUT
-    url: ((firmware.url.leds64))
-    username: ((firmware.username))
-    password: ((firmware.password))
+    access_key_id: ((s3.access_key_id))
+    bucket: hard-status-firmware
+    region_name: eu-central-1
+    secret_access_key: ((s3.secret_access_key))
+    versioned_file: hard-status-esp32-lolin32-64.bin
 
 - name: lolin32-firmware-256
-  type: curl
+  type: s3
   source:
-    method: PUT
-    url: ((firmware.url.leds256))
-    username: ((firmware.username))
-    password: ((firmware.password))
+    access_key_id: ((s3.access_key_id))
+    bucket: hard-status-firmware
+    region_name: eu-central-1
+    secret_access_key: ((s3.secret_access_key))
+    versioned_file: hard-status-esp32-lolin32-256.bin
 
-- name: lolin32-firmware-384
-  type: curl
+- name: lolin32-firmware-1024
+  type: s3
   source:
-    method: PUT
-    url: ((firmware.url.leds384))
-    username: ((firmware.username))
-    password: ((firmware.password))
+    access_key_id: ((s3.access_key_id))
+    bucket: hard-status-firmware
+    region_name: eu-central-1
+    secret_access_key: ((s3.secret_access_key))
+    versioned_file: hard-status-esp32-lolin32-1024.bin
 
 - name: arduino-docker-image
   type: docker-image
   source:
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub.username))
+    password: ((dockerhub.password))
     repository: ((project-registry))/((arduino-image-name))
 
 - name: arduino-esp32-docker-image
   type: docker-image
   source:
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub.username))
+    password: ((dockerhub.password))
     repository: ((project-registry))/((arduino-esp32-image-name))
 
 - name: base-docker-image
@@ -792,20 +824,8 @@ resource_types:
   source:
     repository: timotto/concourse-helm-resource
 
-- name: curl
-  type: docker-image
-  source:
-    repository: timotto/concourse-curl-resource
-    tag: latest
-
 - name: remote-docker-image
   type: docker-image
   source:
     repository: timotto/docker-image-resource
   privileged: true
-
-project-source: &project-source
-  uri: ((git.uri))
-  branch: ((git.branch))
-  private_key: ((git.private_key))
-
