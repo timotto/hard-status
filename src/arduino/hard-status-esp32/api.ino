@@ -46,7 +46,7 @@ void loop_api() {
   bool status200Ok = false;
   while (client.connected()) {
     String line = client.readStringUntil('\n');
-    if (line.startsWith("HTTP/1.0 200 OK")) {
+    if (line.startsWith("HTTP/1") && line.endsWith(" 200 OK\r")) {
       status200Ok = true;
     }
       
@@ -158,4 +158,3 @@ void setup_api_request() {
 void api_trigger_request() {
   nextApiCall = 0;
 }
-
