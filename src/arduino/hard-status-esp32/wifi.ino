@@ -23,8 +23,6 @@ WiFiMulti wifiMulti;
 void setup_wifi() {
   DEBUG("WiFi: setup: started");
   WiFi.mode(WIFI_STA);
-  WiFi.enableIpV6();
-  WiFi.begin();
   char tmp[128];
   snprintf(tmp, 128, "%s.local", config.name);
   WiFi.setHostname(tmp);
@@ -121,4 +119,3 @@ void wifi_hotspot_disable() {
   DEBUG("WiFi: hotspot: disable");
   WiFi.mode(WIFI_STA);
 }
-
