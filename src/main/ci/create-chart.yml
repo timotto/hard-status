@@ -8,5 +8,8 @@ inputs:
 - name: version
 outputs:
 - name: chart
+params:
+  version:
+  VALUES_YAML:
 run:
   path: source-code/src/main/ci/create-chart.sh

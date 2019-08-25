@@ -1,16 +1,27 @@
+{{- if .Values.ingress.enabled -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: hard-status-ingress
   labels:
     app: hard-status
+{{- if .Values.ingress.labels }}
+{{ toYaml .Values.ingress.labels | indent 4 }}
+{{- end }}
   annotations:
-    kubernetes.io/tls-acme: "true"
+    {{- range $key, $value := .Values.ingress.annotations }}
+      {{ $key }}: {{ $value | quote }}
+    {{- end }}
 spec:
   rules:
-  - host: {{ .Values.ingressHostname }}
+  - host: {{ .Values.ingress.hostname }}
     http:
       paths:
       - backend:
           serviceName: hard-status-service
           servicePort: 3001
+  {{- if .Values.ingress.tls }}
+  tls:
+{{ toYaml .Values.ingress.tls | indent 4 }}
+  {{- end -}}
+{{- end -}}

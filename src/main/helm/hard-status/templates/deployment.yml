@@ -28,12 +28,7 @@ spec:
           - name: CACHE_TIME
             value: {{.Values.cacheTime | quote}}
           resources:
-            limits:
-              cpu: "0.5"
-              memory: "60Mi"
-            requests:
-              cpu: "0.2"
-              memory: "30Mi"
+{{ toYaml .Values.resources | indent 12 }}
           livenessProbe:
             httpGet:
               path: /healthz

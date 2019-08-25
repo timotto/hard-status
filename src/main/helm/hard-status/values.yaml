@@ -6,3 +6,19 @@ redisDockerImage: redis
 redisReplicas: 1
 redisUrl: redis://redis-service:6379
 cacheTime: 15
+
+ingress:
+  enabled: false
+  path: /
+  hostname:  "*.chart-example.local"
+  annotations:
+  tls:
+  labels:
+
+resources:
+#  limits:
+#    cpu: "0.5"
+#    memory: "60Mi"
+#  requests:
+#    cpu: "0.2"
+#    memory: "30Mi"
