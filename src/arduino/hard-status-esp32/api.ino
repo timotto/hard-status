@@ -43,6 +43,7 @@ void loop_api() {
   }
 
   client.print(api_request);
+  uint32_t timeout = millis() + 30000;
   bool status200Ok = false;
   while (client.connected()) {
     String line = client.readStringUntil('\n');
@@ -53,8 +54,17 @@ void loop_api() {
     if (line == "\r") {
       break;
     }
+
+    if (millis() >= timeout) {
+      DEBUG("API: timeout while waiting for response");
+      return;
+    }
+
+    // delay() is required to reset watchdog timer
+    delay(10);
   }
   String line = client.readStringUntil('\n');
+  nextApiCall = millis() + (1000 * config.apiCheckDelay);
   
   if(otaState != OTA_STATE_IDLE) {
     DEBUG("API: abort: OTA active");
